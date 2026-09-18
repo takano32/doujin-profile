@@ -469,3 +469,16 @@ v0.3 で自作する予定だったもの(専用ロール、固定ページの�
 1. 👤 移転するかどうかの判断(spec D1)。友人との相談。
 2. 移転するなら: mixhost とカラフルボックスへ問い合わせ(hosting-research.md §9)→ お試し期間に Multisite・SSH・WP-CLI・rsync を実機で確認 → 独自ドメインを決める。
 3. 移転しないなら: Xserver への問い合わせ(xserver-inquiry.md)。
+
+---
+
+## 2026-09-18 ホスティング調査を gist で公開
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-09-18 | ユーザ裁定 J10 | ホスティングの調査を `gh` で gist にする。とくに問題なければ公開でよい |
+
+- 公開した gist: <https://gist.github.com/takano32/aff67caa44a684d747fe24540bc24144>(public、`wordpress-hosting-research.md`)。
+- 中身は [`hosting-research.md`](hosting-research.md) の §1〜§9。**§10「このプロジェクトへの影響」は載せていない**: 本番サイトのセキュリティプラグインを外してある、という現状に触れており、公開の gist に出す必要が無く、友人との共有にも要らないため。
+- 単体で読めるように、リポジトリ内の他の文書への相対リンクと、内部の通し番号(J9・D1・R8)を外し、冒頭の表を「目的」に書き換えた。確認状況の表では、確認したのが AI であることを明記した。
+- 正本はこれまでどおり [`hosting-research.md`](hosting-research.md)。内容を直したら gist も `gh gist edit` でそろえる。
