@@ -144,7 +144,10 @@ WP-CLI の落とし穴(ts-novels と同じ): `--path=~/…` は展開されな�
    `ssh profile 'grep -n "^\s*#" ~/profile.xwp.jp/public_html/.htaccess'` で足りる。
 4. 変更直後に「無関係な URL が 200 のまま」を curl で確認し、壊れていたら即 `.bak` を戻す。
 
-doujin-profile は原則 `.htaccess` を触らずに済む設計にする(ルーティングは WordPress 内で解決する)。
+doujin-profile 自体は `.htaccess` に規則を足さない(URL は WordPress コアが解決する)。
+ただし案 M(Multisite。spec §4)を採る場合は、**`# BEGIN WordPress` ブロックを Multisite 用の規則に差し替える**必要がある
+(`wp core multisite-convert` は `wp-config.php` しか書き換えない。Multisite では WordPress 本体もこのブロックを自動更新しなくなる)。
+CloudSecure を無効化したあとに `rename_login_page` ブロックが残らないかも確認する。どちらも spec §13 の Phase 0 で、バックアップを取ってから行う。
 
 ---
 
