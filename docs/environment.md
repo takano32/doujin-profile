@@ -8,7 +8,7 @@ doujin-profile を入れる WordPress について、**実際に ssh / curl し�
 
 | 項目 | 値 |
 |---|---|
-| 調査日 | 2026-09-18。午後に初回調査(単一サイトの状態)。18 時台に **Multisite 化**([`multisite-trial.md`](multisite-trial.md))を行い、その後に再測定した。本書は**変換後の状態**を書く |
+| 調査日 | 2026-09-18。午後に初回調査(単一サイトの状態)。18 時台に **Multisite 化**([`multisite-trial.md`](multisite-trial.md))を行い、その後に再測定した。19:45 ごろ堅牢化用の mu-plugin を配備し、`ftsf` の権限を整理した。本書は**その後の状態**を書く |
 | 方法 | `ssh profile` でのコマンド(`ls` / `wp` / `php -m` など)と、外部からの `curl`。初回調査は読み取り専用。変換作業で変えたものは [`multisite-trial.md`](multisite-trial.md) にすべて記録してある |
 | 読まなかったもの | `wp-config.php` の中身(Multisite 関連の定数の行だけは確認)、ユーザのメールアドレス、(変換前の)`.htaccess` の CloudSecure ブロック = ログイン URL の変更値 |
 | 未検証事項 | §9 |
@@ -51,7 +51,7 @@ ssh profile           # ~/.ssh/config に設定済み。鍵認証
     │       ├── plugins/  themes/  languages/  upgrade/
     │       ├── uploads/           (メインサイト用。添付 0 件)
     │       │   └── sites/         (Multisite のサイト別アップロード先。`sites/2/` が `/ftsf/` 用)
-    │       └── (mu-plugins/ は**まだ存在しない**)
+    │       └── mu-plugins/        (2026-09-18 作成。`profile-site-hardening.php` だけ。リポジトリの mu-plugins/ が正本)
     ├── autoreply/  htpasswd/  log/  script/   (いずれも空)
     ├── mail/
     └── xserver_php/               (PHP セッションの保存先など)
@@ -166,7 +166,7 @@ doujin-profile 自体は `.htaccess` に規則を足さない(URL は WordPress 
 | メインサイトのパーマリンク | `/blog/%year%/%monthnum%/%day%/%postname%/`(サブディレクトリ型では、コアがメインサイトの投稿に `/blog` を前置する) |
 | ネットワークで有効なテーマ | `twentytwentyfive` `twentytwentyfour`(ほかに 2022・2023 がインストール済み) |
 | プラグイン | **有効なものは無い**。`cloudsecure-wp-security` 1.4.12 は無効(Multisite 非対応。更新あり)。ほかに `akismet` / `hello` / `xserver-typesquare-webfonts`(無効) |
-| `mu-plugins/`・ドロップイン | **なし** |
+| `mu-plugins/` | `profile-site-hardening` 0.1.0(XML-RPC の停止、コメント・ピンバックの閉鎖。`scripts/deploy.sh` で配備)。ドロップインは無し |
 | DB | `profile_wp1` @ localhost、prefix `wp_`、約 2MB、**34 テーブル**: 標準 12 + CloudSecure の 6(`wp_cloudsecurewp_*`。`wp db tables` には出ない)+ Multisite の 6(`wp_blogs` `wp_blogmeta` `wp_site` `wp_sitemeta` `wp_signups` `wp_registration_log`)+ サイト 2 の 10(`wp_2_*`) |
 | 自動更新 | **コアはメジャー・マイナーとも有効**。プラグインは全て off |
 | 定数 | `WP_DEBUG` あり(値は未確認)。`DISALLOW_FILE_EDIT` / `DISALLOW_FILE_MODS` / `FORCE_SSL_ADMIN` / `WP_CACHE` なし |
@@ -188,9 +188,11 @@ doujin-profile 自体は `.htaccess` に規則を足さない(URL は WordPress 
 | ID | user_login | ネットワーク | サイト 1 | サイト 2 (`/ftsf/`) |
 |---:|---|---|---|---|
 | 1 | `takano32` | **特権管理者** | administrator | administrator(サイトの作成者) |
-| 2 | `ftsf` | **特権管理者** | administrator | administrator |
+| 2 | `ftsf` | — | (所属なし) | administrator |
 
-- ネットワーク作成時点の administrator は全員が特権管理者になる(コアの仕様)。`ftsf` の扱いは未裁定(spec D6)。
+- ネットワーク作成時点の administrator は全員が特権管理者になる(コアの仕様)ので、変換直後は `ftsf` も特権管理者だった。
+  2026-09-18 19:45 ごろ、`ftsf` を特権管理者とメインサイトから外し、`/ftsf/` のサイト管理者だけにした(spec §7.8)。
+  戻すときは `wp super-admin add ftsf`。
 - 実測: 特権管理者でないサイト管理者は、自分のサイトで固定ページ・投稿・メディア・テーマの切り替え・サイトエディタ・サイト設定・サイトの削除ができ、
   プラグイン/テーマのインストールと有効化・ファイル編集・`unfiltered_html`・新規ユーザ作成・ネットワーク管理はできない。所属していないサイトには何の権限も無い
   (一時ユーザで確認し、確認後に削除した)。
@@ -212,9 +214,9 @@ doujin-profile 自体は `.htaccess` に規則を足さない(URL は WordPress 
 | `/?author=1` | 301 → `/blog/author/takano32/` | CloudSecure の遮断が外れ、コア標準の転送に戻った |
 | `/wp-json/wp/v2/users` `/ftsf/wp-json/wp/v2/users` | 200(どちらも `takano32` を返す) | 初期投稿の作者として見えている |
 | `/wp-sitemap-users-1.xml` `/ftsf/author/ftsf/` | 200 | — |
-| `/xmlrpc.php` `/ftsf/xmlrpc.php` | GET 405 / **POST 200** | **XML-RPC は生きている**(パスワード総当たりの経路になりうる) |
+| `/xmlrpc.php` `/ftsf/xmlrpc.php` | 認証の要るメソッドは fault 405「このサイト上では XML-RPC サービスが無効になっています。」 | 堅牢化用の mu-plugin で停止済み(配備前は POST を受け付けていた)。ピンバックのメソッドと `X-Pingback` ヘッダも無い。コメント欄も閉じている |
 
-ユーザ名は設計上も公開情報(spec §5.2)。防御の本体は、サーバ側のログイン試行回数制限・2 段階認証・XML-RPC の停止(spec §10)。
+ユーザ名は設計上も公開情報(spec §5.2)。防御の本体は、サーバ側のログイン試行回数制限・2 段階認証(未導入)・XML-RPC の停止(済み)(spec §10)。
 
 ---
 
@@ -226,7 +228,7 @@ doujin-profile 自体は `.htaccess` に規則を足さない(URL は WordPress 
 | 構成 | 単一サイト | **Multisite(サブディレクトリ型)** |
 | CloudSecure WP Security | 有効 | 無効(Multisite 非対応) |
 | 前段キャッシュ | ts-novels の文書は「HTML もキャッシュされる」前提で書かれている | 実測では HTML はキャッシュされない(§3)。設定が違うのか、あちらの推定が違うのかは未確認 |
-| mu-plugins | `ts-library` 配備済み | 未作成 |
+| mu-plugins | `ts-library` 配備済み | `profile-site-hardening` だけ |
 
 ---
 

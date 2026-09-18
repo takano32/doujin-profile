@@ -1,7 +1,7 @@
 # docs — 文書の地図
 
 doujin-profile は `https://profile.xwp.jp/<slug>/` にユーザごとの同人サークル紹介サイトを出す WordPress mu-plugin。
-いまは仕様をまとめている段階で、コードはまだ無い。
+いまは仕様をまとめている段階。コードは、サイト全体の堅牢化用の小さな mu-plugin(`mu-plugins/profile-site-hardening.php`)と配備スクリプト(`scripts/deploy.sh`)だけ。
 
 **このリポジトリは公開**。パスワード・ログイン URL の変更値・メールアドレス・サポートとのやり取りの原文・DB ダンプは入れない。
 
