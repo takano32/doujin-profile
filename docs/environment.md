@@ -8,9 +8,9 @@ doujin-profile を入れる WordPress について、**実際に ssh / curl し�
 
 | 項目 | 値 |
 |---|---|
-| 調査日 | 2026-09-18 |
-| 方法 | `ssh profile` での**読み取り専用**コマンド(`ls` / `wp` の参照系 / `php -m` など)と、外部からの `curl`(GET / HEAD、XML-RPC のみ無害な POST 1 回)。設定変更・ファイル作成は一切していない |
-| 読まなかったもの | `wp-config.php` の中身、`.htaccess` の 4〜24 行(CloudSecure ブロックに**ログイン URL の変更値**が入るため)、ユーザのメールアドレス |
+| 調査日 | 2026-09-18。午後に初回調査(単一サイトの状態)。18 時台に **Multisite 化**([`multisite-trial.md`](multisite-trial.md))を行い、その後に再測定した。本書は**変換後の状態**を書く |
+| 方法 | `ssh profile` でのコマンド(`ls` / `wp` / `php -m` など)と、外部からの `curl`。初回調査は読み取り専用。変換作業で変えたものは [`multisite-trial.md`](multisite-trial.md) にすべて記録してある |
+| 読まなかったもの | `wp-config.php` の中身(Multisite 関連の定数の行だけは確認)、ユーザのメールアドレス、(変換前の)`.htaccess` の CloudSecure ブロック = ログイン URL の変更値 |
 | 未検証事項 | §9 |
 
 ---
@@ -39,15 +39,18 @@ ssh profile           # ~/.ssh/config に設定済み。鍵認証
 /home/profile/
 ├── .bash_profile .bashrc .ssh/
 ├── ssl/
+├── dumps/                         ← 作業前バックアップ(700。Web から見えない)
+│   └── pre-multisite-20260918-1804/   db.sql / wp-config.php / htaccess ほか
 └── profile.xwp.jp/                ← ドメイン単位のルート
     ├── wp-config.php              ★ 公開ルートの外側にある(rsync の --delete 禁止の理由)
     ├── public_html/               ★ 公開ルート = WordPress の設置ディレクトリ (131MB)
-    │   ├── .htaccess              (40 行。§5)
+    │   ├── .htaccess              (41 行。§5)
     │   ├── .user.ini              (PHP 設定。§3)
     │   ├── index.php  wp-*.php  wp-admin/  wp-includes/
     │   └── wp-content/
     │       ├── plugins/  themes/  languages/  upgrade/
-    │       ├── uploads/           (2026/07〜09 の空ディレクトリのみ。添付 0 件)
+    │       ├── uploads/           (メインサイト用。添付 0 件)
+    │       │   └── sites/         (Multisite のサイト別アップロード先。`sites/2/` が `/ftsf/` 用)
     │       └── (mu-plugins/ は**まだ存在しない**)
     ├── autoreply/  htpasswd/  log/  script/   (いずれも空)
     ├── mail/
@@ -57,7 +60,7 @@ ssh profile           # ~/.ssh/config に設定済み。鍵認証
 - **`wp-config.php` は `~/profile.xwp.jp/` 直下**で、`public_html/` の中ではない。
   `~/profile.xwp.jp/` を宛先に `rsync --delete` すると消える。
 - `~/profile.xwp.jp/log/` は空。**アクセスログ・エラーログはユーザから読めない** → 検収は curl と WP-CLI に頼る。
-- `uploads/.htaccess` に Xserver パネル管理の実行拒否ブロックがある(アップロード領域で PHP/CGI は動かない):
+- `uploads/.htaccess` に Xserver パネル管理の実行拒否ブロックがある(アップロード領域で PHP/CGI は動かない。`uploads/sites/` 以下にも継承される):
 
   ```apache
   # BEGIN XS_WPPANEL_UPLOADS_SECURITY
@@ -72,20 +75,22 @@ ssh profile           # ~/.ssh/config に設定済み。鍵認証
 ## 3. リクエストの通り道と PHP の設定
 
 ```
-ブラウザ / curl ──HTTPS──▶ nginx (キャッシュ層) ──▶ Apache (.htaccess 有効) ──▶ PHP 8.0.30 ──▶ WordPress 7.1.1 ──▶ MariaDB 10.11.18
+ブラウザ / curl ──HTTPS──▶ nginx ──▶ Apache (.htaccess 有効) ──▶ PHP 8.0.30 ──▶ WordPress 7.1.1 (Multisite) ──▶ MariaDB 10.11.18
 ```
 
-- すべての応答に `server: nginx`。`.htaccess` の先頭 2 行が前段キャッシュを有効にしている:
+- すべての応答に `server: nginx`。`.htaccess` の先頭 2 行が前段キャッシュのモードを指定している:
 
   ```apache
   SetEnvIf Request_URI ".*" Ngx_Cache_NoCacheMode=off
   SetEnvIf Request_URI ".*" Ngx_Cache_StaticMode
   ```
 
-- `GET /` の 200 応答には `cache-control` / `expires` が付かない(ts-novels で確認済みの「前段キャッシュから返っている」形と同じ)。
-  **検証 curl には毎回キャッシュバスターを付ける**: `curl -sI "https://profile.xwp.jp/f_tsf/?_cb=$RANDOM"`
-- **「反映されない」と見えたら、まずキャッシュを疑う。** 修正を重ねるループに入らない。
-- crontab: 3 日より古い `wp-content/cache/*` を毎日 07:00 に削除(WordPress 側キャッシュの掃除。nginx 側とは別)。
+- **実測(2026-09-18): 現在の設定では、HTML はキャッシュされない。** 固定ページの内容を書き換えると、キャッシュバスター無しの URL にも即時に反映された
+  (同じ URL を先に 6 回取得してからでも同じ)。削除すれば即時に 404。`StaticMode` の名のとおり、キャッシュされるのは静的ファイル。
+  - 静的ファイル(CSS など)の応答は `cache-control: max-age=604800`(7 日)と `expires` 付き。
+  - HTML の応答には `cache-control` も `expires` も付かない(WordPress は通常のページにこれらを付けないので、これ自体はキャッシュの証拠にならない)。
+  - パネルのサーバーキャッシュ設定を変えれば挙動は変わりうる。検証 curl にキャッシュバスター(`?_cb=$RANDOM`)を付ける習慣は害が無いので続ける。
+- crontab: 3 日より古い `wp-content/cache/*` を毎日 07:00 に削除(WordPress 側キャッシュの掃除)。
 
 ### PHP の実行制限 (`.user.ini` 実測)
 
@@ -93,8 +98,8 @@ ssh profile           # ~/.ssh/config に設定済み。鍵認証
 |---|---|---|
 | `memory_limit` | 1G | — |
 | `max_execution_time` | **180 秒** | web 経由の重い処理は落ちる。一括投入は WP-CLI で |
-| `post_max_size` / `upload_max_filesize` | 1G | 画像アップロードの上限はプラグイン側で絞る必要がある |
-| `display_errors` | **On** | PHP の警告が画面に出る。**公開ページで notice/warning を出さない実装**が要る |
+| `post_max_size` / `upload_max_filesize` | 1G | 実際のアップロード上限は WordPress のネットワーク設定が決める(§6) |
+| `display_errors` | **On** | PHP の警告が画面に出る。**公開ページで notice/warning を出さない実装**が要る(変換後の各ページに警告が出ていないことは確認済み) |
 | `disable_functions` | `exec` `shell_exec` `proc_open` `popen` `symlink` ほか | web からの外部コマンド実行は不可 |
 | `date.timezone` | Asia/Tokyo | — |
 | `session.save_path` | `~/profile.xwp.jp/xserver_php/session` | — |
@@ -112,77 +117,83 @@ ssh profile           # ~/.ssh/config に設定済み。鍵認証
 
 | ツール | バージョン | 備考 |
 |---|---|---|
-| WP-CLI | 2.8.1 | 検収と一括操作の主力 |
+| WP-CLI | 2.8.1 | 検収と一括操作の主力。`wp site …` `wp super-admin …` `wp theme enable --network` など Multisite 用のコマンドも使える |
 | PHP | 8.0.30 (CLI) | **mu-plugin は PHP 8.0 互換で書く**(enum・readonly プロパティ・`never` などは使えない) |
 | MariaDB | サーバ 10.11.18 / クライアントあり | `wp db` 経由で使う |
 | python3 | 3.6.8 | 古い。変換処理は開発機側で |
 | rsync / git / curl / make / composer | 3.1.3 / 2.43.7 / あり / あり / 2.5.8 | 配備は rsync |
 | sqlite3 / zip / unzip / perl | あり | — |
-| node / npm | **無し** | JS/CSS のビルドは開発機で済ませ、成果物を rsync する |
+| node / npm | **無し** | JS/CSS のビルドは開発機(node 24)で済ませ、成果物を rsync する |
 
-WP-CLI の落とし穴(ts-novels と同じ): `--path=~/…` は展開されない。`cd ~/profile.xwp.jp/public_html && wp …` とする。
+WP-CLI の注意:
+
+- `--path=~/…` は展開されない。`cd ~/profile.xwp.jp/public_html && wp …` とする。
+- **Multisite なので、サイトを指すときは `--url=https://profile.xwp.jp/ftsf/` を付ける**(付けないとメインサイトが対象になる)。
 
 ---
 
 ## 5. `.htaccess` の構造とガード
 
-`public_html/.htaccess` は 40 行。コメント行(マーカー)だけを確認した:
+`public_html/.htaccess` は 41 行。
 
-| 行 | ブロック | 生成者 |
+| 行 | ブロック | 状態 |
 |---:|---|---|
-| 1–2 | (マーカーなし)nginx キャッシュの `SetEnvIf` × 2 | Xserver |
-| 4–14 | `# BEGIN CloudSecure WP Security Settings` …(内側に `rename_login_page`) | CloudSecure WP Security。**★ログイン URL の変更値がここにある** |
-| 15–24 | `# BEGIN WordPress` … `# END WordPress` | WordPress |
-| 26–33 | `# BEGIN XS_WPPANEL_REDIRECT_HTTPS:profile.xwp.jp` … | Xserver パネル(HTTP→HTTPS 301) |
-| 35–39 | `# BEGIN XS_WPPANEL_WP_ROOT_CGI_SSI` … | Xserver パネル(`.cgi .pl .py .sh .phar .shtml .shtm` を拒否) |
+| 1–2 | (マーカーなし)nginx キャッシュの `SetEnvIf` × 2 | Xserver が生成 |
+| 4–5 | `# BEGIN CloudSecure WP Security Settings` 〜 `# END`(**中身は空**) | CloudSecure を無効化したら、プラグイン自身がログイン URL 変更のブロックを消した。外枠のマーカーだけ残っている |
+| 6–25 | `# BEGIN WordPress` 〜 `# END WordPress` | **Multisite(サブディレクトリ型)用の規則に手で差し替えた**(2026-09-18)。Multisite では WordPress 本体はこのブロックを自動更新しない |
+| 27–34 | `# BEGIN XS_WPPANEL_REDIRECT_HTTPS:profile.xwp.jp` … | Xserver パネル(HTTP→HTTPS 301) |
+| 36–40 | `# BEGIN XS_WPPANEL_WP_ROOT_CGI_SSI` … | Xserver パネル(`.cgi .pl .py .sh .phar .shtml .shtm` を拒否) |
 
 ガード(ts-novels の普遍ルールをそのまま適用):
 
-1. 触る前に `cp .htaccess .htaccess.bak-$(date +%Y%m%d)`。
-2. 書くのは**自分のマーカーブロックの中だけ**。既存ブロックには手を入れない(パネル/プラグインが再生成する)。
-3. **全文をリポジトリ・文書・コミット・チャットに持ち込まない**(ログイン URL 秘匿値)。構造確認は
-   `ssh profile 'grep -n "^\s*#" ~/profile.xwp.jp/public_html/.htaccess'` で足りる。
-4. 変更直後に「無関係な URL が 200 のまま」を curl で確認し、壊れていたら即 `.bak` を戻す。
+1. 触る前にコピーを取る(`~/dumps/` へ)。
+2. 書くのは**自分が管理するブロックの中だけ**。パネルやプラグインのブロックには手を入れない。
+3. CloudSecure を再び有効にした場合、そのブロックには**ログイン URL の変更値**が入る。全文をリポジトリ・文書・コミット・チャットに持ち込まない。
+   構造確認は `ssh profile 'grep -n "^\s*#" ~/profile.xwp.jp/public_html/.htaccess'` で足りる。
+4. 変更直後に「無関係な URL が 200 のまま」を curl で確認し、壊れていたら即コピーを戻す。
 
 doujin-profile 自体は `.htaccess` に規則を足さない(URL は WordPress コアが解決する)。
-ただし案 M(Multisite。spec §4)を採る場合は、**`# BEGIN WordPress` ブロックを Multisite 用の規則に差し替える**必要がある
-(`wp core multisite-convert` は `wp-config.php` しか書き換えない。Multisite では WordPress 本体もこのブロックを自動更新しなくなる)。
-CloudSecure を無効化したあとに `rename_login_page` ブロックが残らないかも確認する。どちらも spec §13 の Phase 0 で、バックアップを取ってから行う。
 
 ---
 
-## 6. WordPress の現状(ほぼ素の状態)
+## 6. WordPress の現状
 
 | 項目 | 実測値 |
 |---|---|
 | コア | **WordPress 7.1.1**(パッケージ言語 en_US、`WPLANG` = ja) |
-| 構成 | **単一サイト**(`MULTISITE` / `WP_ALLOW_MULTISITE` 定数なし) |
-| `siteurl` / `home` | `https://profile.xwp.jp` |
-| `blogname` | プロファイル |
-| `permalink_structure` | `/%year%/%monthnum%/%day%/%postname%/`(既定のまま) |
-| `users_can_register` / `default_role` | `0` / `subscriber`(登録は閉じている) |
-| `blog_public` | 1(検索エンジンに公開) |
-| `show_on_front` | posts |
-| `default_comment_status` | open |
-| 有効テーマ | `twentytwentyfive` 1.5(ほかに 2022〜2024 が入っている) |
-| 有効プラグイン | `cloudsecure-wp-security` 1.4.12(更新あり)のみ |
-| 無効プラグイン | `akismet` 5.7(更新あり)/ `hello` / `xserver-typesquare-webfonts` |
+| 構成 | **Multisite・サブディレクトリ型**(2026-09-18 に `wp core multisite-convert` で変換。`wp-config.php` の 96〜103 行に定数) |
+| サイト | 1: `https://profile.xwp.jp/`(メインサイト、テーマ twentytwentyfive)/ 2: `https://profile.xwp.jp/ftsf/`(タイトル「TSFのF」、テーマ twentytwentyfour)。どちらも公開、中身はコアの初期データ(投稿 `hello-world`、固定ページ `sample-page`) |
+| メインサイトのパーマリンク | `/blog/%year%/%monthnum%/%day%/%postname%/`(サブディレクトリ型では、コアがメインサイトの投稿に `/blog` を前置する) |
+| ネットワークで有効なテーマ | `twentytwentyfive` `twentytwentyfour`(ほかに 2022・2023 がインストール済み) |
+| プラグイン | **有効なものは無い**。`cloudsecure-wp-security` 1.4.12 は無効(Multisite 非対応。更新あり)。ほかに `akismet` / `hello` / `xserver-typesquare-webfonts`(無効) |
 | `mu-plugins/`・ドロップイン | **なし** |
-| 投稿 | 投稿 1(初期投稿)・固定ページ 2(`sample-page` 公開 / `privacy-policy` 下書き)・添付 0 |
-| DB | `profile_wp1` @ localhost、prefix `wp_`、約 0.9MB、標準 12 テーブル |
-| 自動更新 | **コアはメジャー・マイナーとも有効**(7.1.1 へ自動で上がっている)。プラグインは全て off |
+| DB | `profile_wp1` @ localhost、prefix `wp_`、約 2MB、**34 テーブル**: 標準 12 + CloudSecure の 6(`wp_cloudsecurewp_*`。`wp db tables` には出ない)+ Multisite の 6(`wp_blogs` `wp_blogmeta` `wp_site` `wp_sitemeta` `wp_signups` `wp_registration_log`)+ サイト 2 の 10(`wp_2_*`) |
+| 自動更新 | **コアはメジャー・マイナーとも有効**。プラグインは全て off |
 | 定数 | `WP_DEBUG` あり(値は未確認)。`DISALLOW_FILE_EDIT` / `DISALLOW_FILE_MODS` / `FORCE_SSL_ADMIN` / `WP_CACHE` なし |
+
+### ネットワーク設定の既定値(変換直後)
+
+| 設定 | 値 | 評価 |
+|---|---|---|
+| `registration` | `none` | ○ 登録は停止 |
+| `add_new_users` | `0` | ○ サイト管理者は新規ユーザを作れない |
+| `menu_items` | (空) | ○ サイト管理者にプラグインメニューは出ない |
+| `upload_space_check_disabled` | `1` | **× 容量の検査が無効**(上限値 `blog_upload_space` = 100MB は入っているが効いていない) |
+| `fileupload_maxk` | `1500` | 1 ファイル 1,500KB まで |
+| `upload_filetypes` | 画像のほか動画・文書・`css` なども含む長い一覧 | × 画像だけに絞る |
+| `illegal_names` | `www` `web` `root` `admin` `main` `invite` `administrator` `files` `blog` | 運営用の語を足す |
 
 ### ユーザ
 
-| ID | user_login | ロール |
-|---:|---|---|
-| 1 | `takano32` | administrator |
-| 2 | `ftsf` | **administrator** |
+| ID | user_login | ネットワーク | サイト 1 | サイト 2 (`/ftsf/`) |
+|---:|---|---|---|---|
+| 1 | `takano32` | **特権管理者** | administrator | administrator(サイトの作成者) |
+| 2 | `ftsf` | **特権管理者** | administrator | administrator |
 
-- 公開したいプロフィールの slug は `f_tsf` だが、WordPress のログイン名は `ftsf` で**一致していない**。
-- `DISALLOW_FILE_EDIT` が無いので、administrator は管理画面のテーマ/プラグインエディタから PHP を書き換えられる。
-  つまり**管理者権限 = このアカウントで任意コード実行できる権限**。プロフィールの持ち主に渡してよい権限ではない(→ spec の認証・権限の章)。
+- ネットワーク作成時点の administrator は全員が特権管理者になる(コアの仕様)。`ftsf` の扱いは未裁定(spec D6)。
+- 実測: 特権管理者でないサイト管理者は、自分のサイトで固定ページ・投稿・メディア・テーマの切り替え・サイトエディタ・サイト設定・サイトの削除ができ、
+  プラグイン/テーマのインストールと有効化・ファイル編集・`unfiltered_html`・新規ユーザ作成・ネットワーク管理はできない。所属していないサイトには何の権限も無い
+  (一時ユーザで確認し、確認後に削除した)。
 
 ---
 
@@ -190,19 +201,20 @@ CloudSecure を無効化したあとに `rename_login_page` ブロックが残�
 
 | リクエスト | 応答 | 意味 |
 |---|---|---|
-| `/` | 200 `<title>プロファイル</title>` | 既定テーマのブログトップ |
-| `/f_tsf/` `/hoge/` | **404** | まだ何も無い(ここを doujin-profile が受け持つ) |
-| `/sample-page/` | 200 | ルート直下 1 セグメントは固定ページが使っている名前空間 |
-| `/wp-login.php` | 404 | CloudSecure がログイン URL を変更している |
-| `/wp-admin/` | 302 → `/cloudsecurewp_404` | 未ログインの管理画面アクセスを遮断 |
-| `/?author=1` `/?author=2` | 302 → `/cloudsecurewp_404` | CloudSecure が author 列挙を遮断 |
-| `/wp-json/wp/v2/users` | **200**(`takano32` を返す) | **REST 経由のユーザ列挙は開いている** |
-| `/wp-sitemap-users-1.xml` | **200**(`/author/takano32/` を載せている) | サイトマップ経由でも分かる |
-| `/author/takano32/` `/author/ftsf/` | **200** | 著者アーカイブが公開。ログイン名の実在確認に使える |
-| `/xmlrpc.php` | GET 405 / POST 200 | **XML-RPC は生きている**(パスワード総当たりの経路になりうる) |
-| `/wp-json/` | 200 | REST API は公開 |
+| `/` | 200 `<title>プロファイル</title>` | メインサイト |
+| `/ftsf/` | 200 `<title>TSFのF</title>` | サイト 2。前段 nginx 経由でもサイト別の URL が解決される |
+| `/ftsf/sample-page/` `/ftsf/wp-json/` | 200 | サイトの中のページ・REST |
+| `/ftsf/wp-includes/…` `/ftsf/wp-content/themes/…` `/ftsf/wp-admin/css/…` | 200 `text/css` | サイト別パスの静的ファイルも配信される |
+| `/hoge/` `/ftsf/nonexistent/` | 404 | — |
+| `/wp-login.php` `/ftsf/wp-login.php` | **200** | **ログイン URL は標準に戻った**(CloudSecure 無効化のため)。ログイン画面はサイト別に出る |
+| `/wp-admin/` `/ftsf/wp-admin/` `/wp-admin/network/` | 302 → それぞれの `wp-login.php` | — |
+| `/wp-signup.php` `/wp-activate.php` | 404 | 登録は停止 |
+| `/?author=1` | 301 → `/blog/author/takano32/` | CloudSecure の遮断が外れ、コア標準の転送に戻った |
+| `/wp-json/wp/v2/users` `/ftsf/wp-json/wp/v2/users` | 200(どちらも `takano32` を返す) | 初期投稿の作者として見えている |
+| `/wp-sitemap-users-1.xml` `/ftsf/author/ftsf/` | 200 | — |
+| `/xmlrpc.php` `/ftsf/xmlrpc.php` | GET 405 / **POST 200** | **XML-RPC は生きている**(パスワード総当たりの経路になりうる) |
 
-ログイン URL を隠していても、**ログイン名は 3 経路で分かる**状態にある。ユーザを増やす前に塞ぐ(→ spec)。
+ユーザ名は設計上も公開情報(spec §5.2)。防御の本体は、サーバ側のログイン試行回数制限・2 段階認証・XML-RPC の停止(spec §10)。
 
 ---
 
@@ -211,20 +223,22 @@ CloudSecure を無効化したあとに `rename_login_page` ブロックが残�
 | 項目 | novels | profile |
 |---|---|---|
 | ホスト / PHP / WP-CLI / ツール類 | — | **同じ** |
-| WordPress コア | 7.1(2026-08-30 時点) | 7.1.1 |
-| crontab のキャッシュ掃除 | 04:37 | 07:00 |
+| 構成 | 単一サイト | **Multisite(サブディレクトリ型)** |
+| CloudSecure WP Security | 有効 | 無効(Multisite 非対応) |
+| 前段キャッシュ | ts-novels の文書は「HTML もキャッシュされる」前提で書かれている | 実測では HTML はキャッシュされない(§3)。設定が違うのか、あちらの推定が違うのかは未確認 |
 | mu-plugins | `ts-library` 配備済み | 未作成 |
-| 管理者 | — | `takano32` と `ftsf` の 2 名 |
 
 ---
 
 ## 9. 未検証事項
 
-- ログイン中のユーザに対して前段 nginx キャッシュがどう振る舞うか(編集直後に本人が古いページを見る可能性)。
-- `WP_DEBUG` の値。
-- CloudSecure の各機能(ログイン試行制限・2 段階認証・XML-RPC 無効化・REST 制限)の現在の設定値。管理画面でしか見られない → 👤。
-- Xserver for WordPress が Multisite を公式にサポートするか。
-- 規約の解釈(成人向けコンテンツ・第三者へのサービス提供)。spec の「ホスティング規約」の節を参照 → 👤 Xserver サポートへの確認。
+- サーバ側の「ログイン試行回数制限」「国外 IP 制限」が、サイト別のパス(`/ftsf/wp-login.php` など)にも効くか。
+  わざと失敗を重ねると作業元の IP が 24 時間ロックされるおそれがあるので試していない → Xserver への問い合わせ([`xserver-inquiry.md`](xserver-inquiry.md) 第 4 問)。
+- パネルの「セキュリティ自動最適化モード」が、無効化した CloudSecure を有効に戻さないか(2026-09-18 18:10 時点では無効のまま。経過観察)。
+- パネルの手動バックアップと復元が、Multisite でも正常に動くか 👤。
+- 戻し方([`multisite-trial.md`](multisite-trial.md) §2)は文書化したが、**リハーサルはしていない**。
+- `WP_DEBUG` の値。ログイン中のユーザに対する前段 nginx の振る舞い。
+- 規約の解釈(成人向けコンテンツ・第三者へのサービス提供)→ 👤 Xserver サポートへの確認。
 
 ---
 
@@ -234,15 +248,17 @@ CloudSecure を無効化したあとに `rename_login_page` ブロックが残�
 
 - [ ] **`--delete` を使っていない**(`~/profile.xwp.jp/` 直下に `wp-config.php`)
 - [ ] `-n`(dry-run)を先に流し、転送一覧を目で見た
-- [ ] 宛先は `public_html/wp-content/mu-plugins/`
+- [ ] 宛先は `public_html/wp-content/mu-plugins/`(テーマは `public_html/wp-content/themes/`)
 - [ ] `node_modules` などビルド中間物が混ざっていない
 
 ### DB を変える前
 
-- [ ] `mkdir -p ~/dumps` → `wp db export ~/dumps/pre-<用途>-$(date +%Y%m%d-%H%M).sql`(ダンプは公開リポジトリに入れない)
+- [ ] `wp db export ~/dumps/pre-<用途>-$(date +%Y%m%d-%H%M).sql`(ダンプは公開リポジトリに入れない。`~/dumps` は 700)
 - [ ] `--dry-run` があるコマンドは先に dry-run。実行後にもう一度流して変更 0 件(冪等性)を確認
+- [ ] サイトを指すコマンドに `--url=` を付けた(付け忘れるとメインサイトを変えてしまう)
 
 ### 本番での実験
 
-- [ ] `public_html/_probe/` の中だけで行い、**終わったら必ず消す**
-- [ ] 秘匿値(ログイン URL・DB 認証情報・メールアドレス)を文書・コミット・チャットに転記しない
+- [ ] 手順と戻し方を先に文書にした
+- [ ] 一時的に作ったユーザ・ページ・ファイルは**終わったら必ず消す**
+- [ ] 秘匿値(ログイン URL の変更値・DB 認証情報・メールアドレス)を文書・コミット・チャットに転記しない

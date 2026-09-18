@@ -27,7 +27,7 @@ cp -p ~/profile.xwp.jp/wp-config.php ~/dumps/$TS/wp-config.php
 cp -p .htaccess ~/dumps/$TS/htaccess
 ```
 
-ダンプが完結していること(末尾の `Dump completed`、標準 12 テーブルの `CREATE TABLE`)を確認してから先へ進む。
+ダンプが完結していること(末尾の `Dump completed`、`CREATE TABLE` が 18 個 = 標準 12 + CloudSecure の 6)を確認してから先へ進む。
 
 ### 1.2 CloudSecure WP Security の無効化
 
@@ -115,7 +115,7 @@ cd ~/profile.xwp.jp/public_html
 cp -p $B/wp-config.php ~/profile.xwp.jp/wp-config.php
 cp -p $B/htaccess .htaccess
 
-# 2) DB を戻す (標準 12 テーブルが変換前の状態に戻る。CloudSecure も有効な状態に戻る)
+# 2) DB を戻す (ダンプにある 18 テーブルが変換前の状態に戻る。CloudSecure も有効な状態に戻る)
 wp db import $B/db.sql
 
 # 3) 変換で増えたテーブルを消す (import では消えない)
@@ -137,6 +137,52 @@ curl -s -o /dev/null -w '%{http_code}\n' "https://profile.xwp.jp/?_cb=$RANDOM"  
 
 ---
 
-## 3. 結果
+## 3. 結果(2026-09-18 18:04〜18:10 JST に実施)
 
-(実施後に記入)
+**技術的には成立した。** 手順 1.1〜1.5 は書いたとおりに通り、確認項目 C1〜C7 はすべて通過。想定外の挙動は無かった。
+
+### 3.1 実施の記録
+
+| 手順 | 結果 |
+|---|---|
+| 1.1 バックアップ | `~/dumps/pre-multisite-20260918-1804/` に `db.sql`(190KB、18 テーブル、末尾に `Dump completed`)、`wp-config.php`、`htaccess`。チェックサムが元と一致。600 / ディレクトリは 700 |
+| 1.2 CloudSecure 無効化 | 成功。プラグイン自身が `.htaccess` からログイン URL 変更のブロックを消した(外枠のマーカー 2 行だけ残る)。`/wp-login.php` が 200 に戻った |
+| 1.3 変換 | `Set up multisite database tables.` / `Added multisite constants to 'wp-config.php'.` 定数は 96〜103 行(`stop editing` の行と `wp-settings.php` の読み込みより前)。最古の公開投稿が 1 か月以上前でも、WP-CLI ならサブディレクトリ型で変換できた |
+| 1.4 `.htaccess` | WordPress ブロックだけを差し替え(31 行 → 41 行)。差し替え直前の状態も `htaccess.after-cloudsecure-off` として保存。`/` `/sample-page/` `/wp-login.php` `/wp-json/` は 200 のまま、存在しない URL は 404 |
+| 1.5 サイト作成 | `Site 2 created: https://profile.xwp.jp/ftsf/`。`ftsf` を管理者に追加。TT4 をネットワークで有効化し `/ftsf/` だけ TT4 に |
+
+### 3.2 確認項目
+
+| # | 結果 |
+|---|---|
+| C1 | ✅ `/` `/sample-page/` `/wp-login.php` が 200 |
+| C2 | ✅ `/ftsf/` 200、`/ftsf/sample-page/` 200、`/ftsf/wp-login.php` 200(タイトルは「ログイン ‹ TSFのF」、フォームの送信先も `/ftsf/wp-login.php`)、`/ftsf/wp-admin/` は `/ftsf/wp-login.php` へ 302、`/ftsf/wp-json/` 200、`/hoge/` 404 |
+| C3 | ✅ `/ftsf/wp-includes/css/…`、`/ftsf/wp-content/themes/twentytwentyfour/style.css`、`/ftsf/wp-admin/css/login.min.css` がいずれも 200 `text/css`。前段 nginx はリクエストを Apache まで通しており、`.htaccess` の書き換えが効く |
+| C4 | ✅ `/` の HTML は `themes/twentytwentyfive` だけ、`/ftsf/` は `themes/twentytwentyfour` だけを参照。タイトルも「プロファイル」と「TSFのF」で別 |
+| C5 | ✅ 特権管理者でないサイト管理者(一時ユーザで確認 → 削除済み)は、自分のサイトの編集・テーマ切り替え・サイトエディタ・サイト設定・サイト削除ができ、プラグイン/テーマの導入・ファイル編集・`unfiltered_html`・新規ユーザ作成・ネットワーク管理はできない。所属していないメインサイトには `read` すら無い |
+| C6 | ✅ 作業の最後(18:10)でも CloudSecure は無効のまま、`.htaccess` のマーカーも変わらず。**パネルの自動最適化が後から戻さないかは経過観察** |
+| C7 | ✅ **現在の設定では HTML はキャッシュされない**。検証用ページの内容を書き換えると、キャッシュバスター無しの URL にも即時に反映された(先に同じ URL を 6 回取得してからでも同じ)。削除後は即時に 404。静的ファイルは `max-age=604800`。検証用ページは削除済み |
+| — | ✅ 各ページの HTML に PHP の Warning / Notice / Deprecated は出ていない(`display_errors = On` のため確認) |
+
+### 3.3 分かったこと
+
+- **コアは、既存ユーザと同名のサイト名をそのユーザのために確保する。** 別のユーザとして `wpmu_validate_blog_signup('ftsf')` を呼ぶと「このサイト名は予約済みです」。
+  「サイト名 = 持ち主のユーザ名」という設計と噛み合う。招待コマンドは持ち主を渡して検査する必要がある。
+- `f_tsf` はコアの検査で「サイト名には半角英字の小文字 (a-z) と半角数字のみを含められます」と拒否される(裁定 J4 のとおり)。
+- **ネットワーク作成時点の administrator は全員が特権管理者になる**(`takano32` と `ftsf`)。権限の強さは変換前と同じだが、spec の原則(特権管理者は運営者だけ)には反している → D6。
+- 新しいサイトには、コアが `hello-world` と `sample-page` を入れる。サイトの作成者(`takano32`)も管理者として入る。どちらも Phase 1 の「サイトの初期設定」で整える対象。
+- ネットワーク設定の既定値のうち、**アップロード容量の検査は無効**、許可形式は画像以外も含む。Phase 1 で直す(environment.md §6)。
+- CloudSecure が無効になったので、`/?author=N` の遮断が外れ、XML-RPC も引き続き POST を受け付ける。ユーザ名は設計上も公開情報だが、XML-RPC は早めに止めたい(spec §10)。
+
+### 3.4 していないこと
+
+- サーバ側のログイン試行回数制限がサイト別のパスに効くかの確認(作業元 IP のロックを避けた)。
+- 戻し方(§2)のリハーサル。手順は書いてあり、バックアップの完結性は確かめたが、実際に戻してはいない。
+- パネルの手動バックアップと復元の確認 👤。
+
+### 3.5 いまの状態と、利用者が知っておくべきこと
+
+- 本番は **Multisite のまま**にしてある(`/` と `/ftsf/` の 2 サイト。どちらも中身はコアの初期データ)。
+- **ログイン URL は `https://profile.xwp.jp/wp-login.php`(`/ftsf/` のサイトは `https://profile.xwp.jp/ftsf/wp-login.php`)。CloudSecure で変更していた URL は使えない。**
+- ネットワーク管理画面は `https://profile.xwp.jp/wp-admin/network/`。
+- Xserver の回答が否定的だった場合は、§2 の手順で単一サイトに戻す。
