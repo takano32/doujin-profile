@@ -8,7 +8,7 @@ doujin-profile を入れる WordPress について、**実際に ssh / curl し�
 
 | 項目 | 値 |
 |---|---|
-| 調査日 | 2026-09-18。午後に初回調査(単一サイトの状態)。18 時台に **Multisite 化**([`multisite-trial.md`](multisite-trial.md))を行い、その後に再測定した。19:45 ごろ堅牢化用の mu-plugin を配備し、`ftsf` の権限を整理した。本書は**その後の状態**を書く |
+| 調査日 | 2026-09-18。午後に初回調査(単一サイトの状態)。18 時台に **Multisite 化**([`multisite-trial.md`](multisite-trial.md))を行い、その後に再測定した。19:45 ごろ堅牢化用の mu-plugin を配備した。本書は**その後の状態**を書く |
 | 方法 | `ssh profile` でのコマンド(`ls` / `wp` / `php -m` など)と、外部からの `curl`。初回調査は読み取り専用。変換作業で変えたものは [`multisite-trial.md`](multisite-trial.md) にすべて記録してある |
 | 読まなかったもの | `wp-config.php` の中身(Multisite 関連の定数の行だけは確認)、ユーザのメールアドレス、(変換前の)`.htaccess` の CloudSecure ブロック = ログイン URL の変更値 |
 | 未検証事項 | §9 |
@@ -188,11 +188,10 @@ doujin-profile 自体は `.htaccess` に規則を足さない(URL は WordPress 
 | ID | user_login | ネットワーク | サイト 1 | サイト 2 (`/ftsf/`) |
 |---:|---|---|---|---|
 | 1 | `takano32` | **特権管理者** | administrator | administrator(サイトの作成者) |
-| 2 | `ftsf` | — | (所属なし) | administrator |
+| 2 | `ftsf` | **特権管理者** | administrator | administrator |
 
-- ネットワーク作成時点の administrator は全員が特権管理者になる(コアの仕様)ので、変換直後は `ftsf` も特権管理者だった。
-  2026-09-18 19:45 ごろ、`ftsf` を特権管理者とメインサイトから外し、`/ftsf/` のサイト管理者だけにした(spec §7.8)。
-  戻すときは `wp super-admin add ftsf`。
+- `takano32` と `ftsf` は、どちらも運営者(spec §7.8)。ネットワーク作成時点の administrator は全員が特権管理者になる(コアの仕様)ので、変換でこの状態になった。
+- 2026-09-18 19:45 ごろ、Claude が誤って `ftsf` を特権管理者とメインサイトから外したが、同日中に元へ戻した(`wp super-admin add ftsf` と、メインサイトでの `wp user set-role ftsf administrator`)。
 - 実測: 特権管理者でないサイト管理者は、自分のサイトで固定ページ・投稿・メディア・テーマの切り替え・サイトエディタ・サイト設定・サイトの削除ができ、
   プラグイン/テーマのインストールと有効化・ファイル編集・`unfiltered_html`・新規ユーザ作成・ネットワーク管理はできない。所属していないサイトには何の権限も無い
   (一時ユーザで確認し、確認後に削除した)。
