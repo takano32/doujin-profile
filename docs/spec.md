@@ -183,7 +183,8 @@
   将来使いそうな語(`login` `logout` `register` `signup` `account` `settings` `admin` `api` `assets` `static` `help` `about` `terms` `privacy` `contact` `news` `blog` `profile` `profiles` `user` `users` `works` `announce` ほか)、
   運用上の語(`_probe` `cloudsecurewp_404`)。一覧はコード内の 1 箇所で管理し、フィルタで足せるようにする。
 - **固定ページとの衝突**: 既存の固定ページ slug(いまは `sample-page` `privacy-policy`)は予約語扱い。逆向きも塞ぐ —
-  プロフィールが使っている slug で固定ページを作ろうとしたら、コアの slug 一意化の仕組みに「使用不可」と答えて連番に逃がす。
+  プロフィールが使っている slug で固定ページを作ろうとしたら、コアの slug 一意化の仕組みに「使用不可」と答えて連番に逃がす
+  (`wp_unique_post_slug_is_bad_hierarchical_slug` フィルタ)。**コアの `wp_unique_post_slug()` は投稿タイプをまたいだ重複を防がない**ので、両方向とも自前で検査する(付録 A-10)。
 - slug の変更は運営者だけ。旧 slug からは 301(旧 slug は再取得不可として保持)。
 
 ### 5.3 解決方法(rewrite rules を足さない)
@@ -191,10 +192,15 @@
 いまのパーマリンク構造では、`/f_tsf/` も `/f_tsf/announce/` も WordPress は「固定ページ候補(`pagename`)」として解釈する(実測: 現状は 404)。
 そこで **`request` フィルタで、先頭セグメントが公開中のプロフィール slug に一致するときだけ**クエリ変数をプロフィール用に差し替える。
 
-- 一致しなければ何もしない → 固定ページや既存の経路の挙動は一切変わらない。
-- rewrite rules を足さないので flush が要らない(§3.2)。
+- 一致しなければ何もしない → 固定ページや既存の経路の挙動は一切変わらない。同名の固定ページが実在するときは固定ページが勝つ(コアの挙動のまま)。
+- rewrite rules を足さないので flush が要らない(§3.2)。投稿タイプは `rewrite => false` で登録する
+  (`'rewrite' => ['slug' => '']` はコアが投稿タイプ名に上書きするので効かない)。
 - slug → 投稿 ID の対応はオブジェクトキャッシュ+軽いクエリで引く。
-- 未検証: フィード(`/f_tsf/feed/`)や添付ファイル URL など、先に別のルールに一致する経路の扱い。Phase 1 の最初に確かめる。
+- 未検証: フィード(`/f_tsf/feed/`)や添付ファイル URL など、先に別のルールに一致する経路の扱い。Phase 0 で確かめる。
+
+**ここがこの設計でいちばん壊れやすい箇所**(付録 A-10): 同じ `request` フィルタ方式の先行例 `remove-cpt-base`(解決順は 投稿 → 固定ページ → 対象 CPT)は
+更新履歴が 404 まわりの修正の繰り返しで、Ultimate Member は公式にプロフィール URL のルート直下化を「不可能」としている(予約語と経路の競合が理由)。
+そこで (1) **登録済みの slug だけを拾う**(汎用の正規表現で 1 セグメントを総取りしない)、(2) 予約語、(3) 投稿タイプ横断の一意性検査、の 3 点で守り、実装の前に小さく検証する。
 
 ---
 
@@ -304,6 +310,7 @@ WP-CLI の投入・書き出しと、将来の移行に使う正規形。f_tsf �
 | `edit_doujin_profiles` | ○ | 自分のプロフィールの編集 |
 | `edit_published_doujin_profiles` | ○ | 公開後も編集できる |
 | `publish_doujin_profiles` | **×**(要決定 D11) | 初回公開は運営者が承認する。規約リスク(§3.3)の歯止め |
+| 新規作成(`create_posts` に対応付ける権限) | **×** | 既定では `edit_doujin_profiles` に対応付けられ、持ち主が**プロフィールを何個でも新規作成できてしまう**(slug の占拠)。別の権限に対応付け、運営者だけに与える |
 | `edit_others_doujin_profiles` / `read_private_…` / `delete_…` | × | 他人のものに触れない。削除は運営者だけ(slug の使い回し・乗っ取り防止) |
 | `upload_files` | ○(画像のみ) | アイコン・OGP・サンプル用。下の制限とセット |
 | `edit_posts` ほかコアの投稿系・`unfiltered_html`・`manage_options` など | × | — |
@@ -314,10 +321,16 @@ WP-CLI の投入・書き出しと、将来の移行に使う正規形。f_tsf �
 - 受け付けるのは画像(JPEG / PNG / WebP / GIF)だけ。1 枚のサイズと、ユーザあたりの総量に上限。
 - 添付ファイルの編集・削除権限はコアでは「投稿」の権限に紐づくため、`upload_files` だけでは自分の画像を消せない。ここだけ権限の対応付けを補う。
 - `uploads/` では PHP が実行されない(実測: Xserver の拒否ブロックあり)。
+- **アップロードした画像は、その時点で公開物として扱う**。`uploads/` は Web サーバが直接配信し、コアは未認証の `/wp-json/wp/v2/media` で添付ファイルを一覧できる。
+  メディアライブラリの絞り込みは表示上のフィルタであってアクセス制御ではない。下書きプロフィールの画像も URL が分かれば見える(一覧 API の制限は §10)。
+  「未公開にしたい素材はアップロードしない」と持ち主に明示する。
 
 運営者(administrator)にも `doujin_profile` 系の権限を明示的に付与する(独自 `capability_type` は自動では付かない)。
+`map_meta_cap => true` は必ず明示する(`capability_type` が `post` / `page` 以外だと既定で false になり、所有者判定が効かなくなる)。
 
 ロールの登録は §3.2 の「バージョン付きの冪等な初期化」で行う(`add_role()` は DB に書き込むため、毎リクエスト呼ばない)。
+既存ロールに対する `add_role()` の再実行は何もしないので、権限の増減は差分を `add_cap()` / `remove_cap()` で適用する。
+DB に書かない代替として bbPress の動的ロール方式もある(付録 A-2)。どちらにするかは実装時に決める。
 
 ### 7.4 ログインと管理画面
 
@@ -409,14 +422,19 @@ title / description / canonical / robots / OGP / Twitter Card / JSON-LD / theme-
 プロフィールの機能とは独立だが、**持ち主のアカウントを作る前に塞いでおくべき穴**(実測で開いていたもの)。
 doujin-profile 本体と分けて `mu-plugins/profile-site-hardening.php`(仮)に置き、本体は他サイトでも使える形に保つ。
 
+前提として、WordPress コアは「ユーザ名やユーザ ID は秘密ではない」という立場で、REST のユーザ一覧が未認証で見えるのも意図された挙動(付録 A-6)。
+ここで塞ぐのは多層防御の一枚であって、**防御の本体は強いパスワード・試行制限・2 段階認証**。
+
 | 対象 | 現状(実測) | 対処 |
 |---|---|---|
-| `/wp-json/wp/v2/users` | 未認証で 200(ユーザを返す) | 未認証にはユーザ系エンドポイントを見せない。プロフィールを REST に出す場合、持ち主が「公開投稿の作者」として一覧に現れるので、これを塞ぐ前に REST 公開しない |
-| `/wp-sitemap-users-1.xml` | 200 | ユーザのサイトマップを無効化 |
-| `/author/<ログイン名>/` | 200 | 著者アーカイブを 404 に |
+| `/wp-json/wp/v2/users` | 未認証で 200(ユーザを返す) | 未認証にはユーザ系エンドポイントを見せない。露出条件は「`show_in_rest` な投稿タイプで公開投稿を持つユーザ」なので、プロフィールを REST に出すと持ち主全員が一覧に現れる |
+| (同上の安価な緩和) | — | 未認証で返るのは `slug`(= `user_nicename`)と `name`(= `display_name`)だけ。**招待時にこの 2 つをログイン名と別の値にしておく**だけで、ログイン名は漏れなくなる |
+| `/wp-sitemap-users-1.xml` | 200 | ユーザのサイトマップを無効化(`wp_sitemaps_add_provider`) |
+| `/author/<user_nicename>/` | 200 | 著者アーカイブを 404 に |
+| oEmbed 応答の著者情報 | 未確認 | `author_name` / `author_url` を除去(`oembed_response_data`)。`doctor` の確認項目に入れる |
+| `/wp-json/wp/v2/media` | 未確認(コアの既定では未認証で全件一覧できる) | 未認証の一覧を止める。§7.3 のとおり画像そのものは公開物だが、下書きの素材を一覧で拾われないようにする |
 | XML-RPC | POST 200 | 無効化(CloudSecure の設定で可能ならそちらで 👤) |
 | コメント | 既定 open | 閉じる(使わない) |
-| oEmbed の著者情報など | 未確認 | `doctor` の確認項目に入れる |
 
 ---
 
@@ -463,7 +481,7 @@ doujin-profile 本体と分けて `mu-plugins/profile-site-hardening.php`(仮)�
 | D2 | 全体構成 | 案 A(単一サイト+CPT) | Multisite は `f_tsf` という名前が作れない |
 | D3 | WordPress のユーザ管理と統合するか | 統合する。ただしプロフィール(slug)とアカウントは別実体で紐付け、専用ロールのみ付与 | §4.2・§7 |
 | D4 | 登録方式 | 招待制のみ。セルフ登録は MVP に含めない | §7.5 |
-| D5 | 持ち主の編集画面(Phase 2) | 絞り込んだ管理画面。フロントエンド編集は Phase 3 で検討 | §8 |
+| D5 | 持ち主の編集画面(Phase 2) | 持ち主にとっての編集のしやすさを製品の核にするなら**フロントエンド編集**、早く確実に出すなら**絞り込んだ管理画面** | 会員系プラグイン(WooCommerce・MemberPress・Paid Memberships Pro・Ultimate Member)は低権限ユーザを管理画面に入れずフロントで完結させるのが主流。ただし WordPress 公式がそう推奨しているわけではなく、フロント編集は編集 UI を自作する分だけ不具合の余地が増える。どちらでも最後の防御線は権限検査(付録 A-9)。§8 |
 | D6 | `ftsf` を administrator から専用ロールへ変更するか、時期 | Phase 2 で変更。`DISALLOW_FILE_EDIT` も入れる | §7.6 |
 | D7 | `/`(トップ)に何を出すか | 当面は既定のまま触らない。プロフィールの一覧は出さない | 成人向けプロフィールを一覧に並べるかという問題も付いてくる |
 | D8 | `/f_tsf/` の canonical | 要相談。`ftsf.me` を正とするなら `ftsf.me` 向き、こちらへ移すなら自己参照 | `ftsf.me` は稼働中。GitHub Pages 版も canonical は `ftsf.me` |
@@ -477,19 +495,107 @@ doujin-profile 本体と分けて `mu-plugins/profile-site-hardening.php`(仮)�
 
 ## 付録 A. 参考にする既存プラグインとコアの仕組み
 
-先行事例の調査は進行中。一次情報での裏取りが済んだものから、出典つきでここに追記する。現時点の整理:
+2026-09-18 に Web で調査した結果(公式ドキュメント・公式リポジトリを優先。調査は別エージェントが行い、出典を付けて報告したもの)。
+番号は本文からの参照用。「推測」と書いたものは事実ではなく調査からの見立て。
 
-| 参考 | 借りる考え方 |
-|---|---|
-| WooCommerce(`customer` ロール) | 最小権限のロール+低権限ユーザを管理画面から遠ざける |
-| Ultimate Member / BuddyPress | アカウントは `wp_users`、プロフィールは別のデータとして持つ。登録の承認・メール確認の状態管理 |
-| bbPress(動的ロール) | 有効化フックに頼らないロールの持ち方 |
-| Co-Authors Plus(guest author と linked account)/ PublishPress Authors | **公開される人物像とログインアカウントを別実体にして紐付ける** |
-| コア: `capability_type` + `map_meta_cap` | 「自分の投稿だけ編集可」をコアの判定に任せる |
-| コア: Multisite のサイト名規則・予約語 | slug 規則と予約語の下敷き(`page` `comments` `blog` `files` `feed` `wp-admin` `wp-content` `wp-includes` `wp-json` `embed`、および `www` `web` `root` `admin` `main` `invite` `administrator`) |
+### A-1. アカウントの置き場所 — ほぼ全員が `wp_users`
+
+- BuddyPress・bbPress・Ultimate Member・WooCommerce・MemberPress はいずれも `wp_users` / `wp_usermeta` が唯一のアカウント基盤で、独自テーブルは `user_id` を持つ付属データ。
+  bbPress は独自テーブルを作らない([bbPress](https://codex.bbpress.org/getting-started/before-installing/stored-database-data/))。
+  MemberPress は「ユーザの作成・保存・管理・認証を完全に WordPress API に依存」と明記([MemberPress](https://memberpress.com/docs/where-is-data-stored/))。
+- 独自のユーザテーブル+独自認証は少数派(Simple Membership、WP eMember)。しかも Simple Membership の公式文書自身が「会員レコードと WP ユーザレコードの 2 つを作って連携する」と述べており、
+  結局は二重管理になっている([Simple Membership](https://simple-membership-plugin.com/understanding-the-connection-between-simple-membership-members-and-wordpress-users/))。
+- 「アカウントを持たない人」を扱う定石は独自認証ではなく、`user_id` を空にできるデータ側の設計(WooCommerce、Easy Digital Downloads の customers テーブル)。
+  → 本仕様の「プロフィールは投稿、持ち主は任意で紐付く」と同じ考え方。
+
+### A-2. 低権限ロール
+
+- WooCommerce の `customer` ロールの権限は `read` だけ([class-wc-install.php](https://github.com/woocommerce/woocommerce/blob/trunk/plugins/woocommerce/includes/class-wc-install.php))。
+- 管理画面からの締め出しはロール名ではなく**権限で判定**: `edit_posts` / `manage_woocommerce` / `view_admin_dashboard` のどれも無ければ My Account へ転送。
+  `admin-ajax.php` と `admin-post.php` は除外([class-wc-admin.php](https://github.com/woocommerce/woocommerce/blob/trunk/plugins/woocommerce/includes/admin/class-wc-admin.php))。いちばん真似しやすい形。
+- Ultimate Member はロールごとに「wp-admin に入れるか」「管理バーを隠すか」を設定で持つ([UM](https://docs.ultimatemember.com/article/103-user-roles-settings))。
+- bbPress の動的ロール: ロールを DB に保存せず実行時に `$wp_roles` へ足す。理由は「ロールや権限を変えるたびに DB 移行スクリプトが要るのは労力に見合わない」
+  ([bbPress フォーラム](https://bbpress.org/forums/topic/roles-and-capabilities-in-bbpress-2-2/))。有効化フックの無い mu-plugin と相性がよい。
+
+### A-3. 公開される人物像とアカウントの分離
+
+- Co-Authors Plus: guest author は投稿タイプ `guest-author`。公開 slug は専用メタ、WP ユーザとの連携は `cap-linked_account`
+  ([ソース](https://github.com/Automattic/Co-Authors-Plus/blob/master/php/class-coauthors-guest-authors.php))。
+- PublishPress Authors: 著者の実体はタクソノミーのターム。WP ユーザとの対応は term meta で、無ければゲスト = アカウント不要
+  ([ソース](https://github.com/publishpress/PublishPress-Authors/blob/development/src/core/Classes/Objects/Author.php))。
+- コア: 著者 URL の slug は `user_nicename`(varchar 50)。`user_login` と別の値にできる。予約ユーザ名は `illegal_user_logins` フィルタ。
+- BuddyPress のプロフィール URL は既定で `user_nicename`。Ultimate Member は 7 種類から選べる(ユーザ名・氏名・ID・ハッシュ・任意のメタ)。
+- **Ultimate Member は、プロフィール URL から `/user/` を取り除いてルート直下にすることを公式に「不可能」としている**。理由はコアの予約語と経路の競合
+  ([UM](https://docs.ultimatemember.com/article/1890-remove-the-word-user-or-profile-from-the-profile-url))。→ §5.3。
+
+### A-4. 「自分の投稿だけ編集可」の標準手法
+
+- `capability_type` が `post` / `page` 以外だと `map_meta_cap` は既定で false。**明示的に true にする**([WP_Post_Type::set_props](https://developer.wordpress.org/reference/classes/wp_post_type/set_props/))。
+- 所有者限定は「`edit_others_*` / `delete_others_*` を与えない」ことで実現する。公開済みの自分の投稿の編集には `edit_published_*` が要る([map_meta_cap](https://developer.wordpress.org/reference/functions/map_meta_cap/))。
+- `create_posts` は既定で `edit_posts` 相当に対応付けられる([get_post_type_capabilities](https://developer.wordpress.org/reference/functions/get_post_type_capabilities/))。→ §7.3 で別権限に分けた理由。
+- メディア: コアは既定で絞り込まない。絞るなら `ajax_query_attachments_args`(モーダル)・`pre_get_posts`(一覧)・`rest_attachment_query`(REST)の 3 経路。
+  ただし表示上のフィルタであってアクセス制御ではなく、`/wp-json/wp/v2/media` は未認証で全件一覧できる。→ §7.3・§10。
+- `unfiltered_html` を与えると KSES フィルタが丸ごと外れる = 保存型 XSS に直結。低権限ロールには付けない。
+
+### A-5. mu-plugin の制約
+
+- 「must-use プラグインでは有効化フックは実行されない」「サブディレクトリは探さない」([公式](https://developer.wordpress.org/advanced-administration/plugins/mu-plugins/))。
+- `add_role()` はオプションに書き込む。毎回呼ばず条件付きで。**既存ロールへの再実行は権限リストの変更も含めて何もしない**([add_role](https://developer.wordpress.org/reference/functions/add_role/))。
+- `flush_rewrite_rules()` は「性能面で極めて高コスト」([公式](https://developer.wordpress.org/reference/classes/wp_rewrite/flush_rules/))。→ rewrite rules を足さない設計(§5.3)の根拠。
+- 「バージョン付きの初期化」を明文で推奨する公式文書は見つかっていない(上の注意書きからの実務的な帰結 = 推測)。
+
+### A-6. ユーザ列挙
+
+- コアの公式見解: 「ユーザ名やユーザ ID は秘密と見なさない。REST の `/wp/v2/users` が公開で見えるのは意図したもの」
+  ([Reporting Security Vulnerabilities](https://make.wordpress.org/core/handbook/testing/reporting-security-vulnerabilities/))。
+- 経路は 4 つで条件が違う: `/?author=N`(公開投稿があるとき転送)、REST(`show_in_rest` な投稿タイプで公開投稿を持つユーザ。`public` かどうかは関係ない)、
+  ユーザサイトマップ(`public` な投稿タイプで公開投稿を持つユーザ)、**oEmbed**(`author_name` と `author_url` を返す。見落とされやすい)。
+- 未認証で返るのは `slug`(`user_nicename`)と `name`(`display_name`)だけ。`user_login` とメールは返らない。→ §10 の安価な緩和。
+- 止め方: `rest_endpoints`、`wp_sitemaps_add_provider`([告知記事](https://make.wordpress.org/core/2020/07/22/new-xml-sitemaps-functionality-in-wordpress-5-5/))、`oembed_response_data`。
+
+### A-7. 登録の流れ
+
+- `wp_new_user_notification()` は平文パスワードを送らず、パスワード設定リンクを送る。鍵はハッシュして保存され、期限は既定 24 時間
+  ([get_password_reset_key](https://developer.wordpress.org/reference/functions/get_password_reset_key/))。→ §7.5 の招待はこれに乗る。
+- 招待制そのものはコアに無い。実質は「登録を閉じる+管理者が作る」。
+- WordPress 7.0 で、一般設定の「新規ユーザのデフォルト権限」から Administrator と Editor が外された
+  ([7.0 Field Guide](https://make.wordpress.org/core/2026/05/14/wordpress-7-0-field-guide/))。背景に、登録フォームの既定ロールを管理者にできてしまう権限昇格の実例がある。
+- オープン登録のスパム被害は実例多数。BuddyPress は単一サイトでも `signups` テーブルでメール確認の 2 段階。
+
+### A-8. コアの認証まわり
+
+- WordPress 6.8 でパスワードは bcrypt に。リセット鍵や Application Passwords は BLAKE2b。既存ハッシュは次回ログイン時に自動で更新
+  ([告知](https://make.wordpress.org/core/2025/02/17/wordpress-6-8-will-use-bcrypt-for-password-hashing/))。
+- Application Passwords は REST / XML-RPC の Basic 認証専用で、**権限の絞り込みができず、そのユーザの全権限を引き継ぐ**
+  ([統合ガイド](https://make.wordpress.org/core/2020/11/05/application-passwords-integration-guide/))。→ §7.4 で持ち主には無効化する理由。
+- 2 段階認証は 2026-09 時点でもコアに無く、プラグイン([Two-Factor](https://wordpress.org/plugins/two-factor/))。
+- nonce は認証・認可の代わりにならない。必ず `current_user_can()` と組み合わせる([Nonces](https://developer.wordpress.org/apis/security/nonces/))。
+
+### A-9. フロントエンド編集か、管理画面か
+
+- 会員系プラグインは**フロントで完結させるのが主流**(WooCommerce の My Account、MemberPress と Paid Memberships Pro の「会員をダッシュボードに入れない」設定、Ultimate Member)。
+- 一方で「低権限ユーザに wp-admin を見せるべきでない」という WordPress 公式の推奨は見つかっていない。コアの既定はむしろ、`read` 権限でダッシュボードと自分のプロフィールに入れる。
+- 公式が求めるのは場所を問わず nonce + 権限検査 + サニタイズ/エスケープの 3 点([Security](https://developer.wordpress.org/apis/security/))。
+- 推測: フロント編集の利点は攻撃面の縮小と使い勝手、欠点は編集 UI を全部自作することによる不具合の増加。
+
+### A-10. ルート直下 `/<slug>/` を投稿タイプに割り当てる
+
+- `'rewrite' => ['slug' => '']` は効かない。コアが空の slug を投稿タイプ名で上書きする([class-wp-post-type.php](https://github.com/WordPress/wordpress-develop/blob/trunk/src/wp-includes/class-wp-post-type.php))。
+- 投稿タイプの rewrite rule は固定ページに構造上負ける。同名の固定ページが実在すれば必ず固定ページが勝つ。
+- **`wp_unique_post_slug()` は投稿タイプをまたいで重複を防がない**([リファレンス](https://developer.wordpress.org/reference/functions/wp_unique_post_slug/))。横断の一意性は自前で担保する。
+- 定石は `request` フィルタで 404 を拾い直す方式。wordpress.org 配布の [`remove-cpt-base`](https://plugins.svn.wordpress.org/remove-cpt-base/trunk/remove-cpt-base.php) がこれで、解決順は 投稿 → 固定ページ → 対象 CPT。
+  更新履歴は 404 関連の修正の繰り返し = 慢性的に壊れやすい領域。
+- Multisite サブディレクトリ型の予約サイト名は 10 個(`page` `comments` `blog` `files` `feed` `wp-admin` `wp-content` `wp-includes` `wp-json` `embed`)。
+  ユーザ名側の禁止語は `www` `web` `root` `admin` `main` `invite` `administrator`。サイト名に使える文字は §4.1 のとおり。ユーザテーブルはネットワーク全体で共有。
+
+### A-11. 調査で確認できなかったこと
+
+- core.trac.wordpress.org と wordpress.stackexchange.com は本文を取得できず、チケットや回答の中身は未確認。
+- 2 段階認証のコア統合の計画。Xserver for WordPress における Multisite の公式サポート可否。
 
 ## 改訂履歴
 
 | 版 | 日付 | 内容 |
 |---|---|---|
 | v0.1 | 2026-09-18 | 初版(草案)。環境の実測・f_tsf の棚卸し・規約の確認にもとづく提案。すべて未裁定 |
+| v0.1.1 | 2026-09-18 | 先行事例の調査結果を反映: 付録 A を出典つきで全面更新。§5.2・§5.3(URL 解決が最も壊れやすい箇所であることと守り方)、§7.3(新規作成権限の分離、画像は公開物、`map_meta_cap` の明示、`add_role()` の挙動)、§10(安価な緩和策、oEmbed、メディア一覧)、D5 を補強 |
