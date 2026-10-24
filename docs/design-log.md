@@ -1264,3 +1264,16 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 - ブロックエディタ(ヘッドレスの Chrome 156。`crossOriginIsolated`、ブラウザ側の縮小が有効)で 22MB の jpg → `media` の POST、`sideload` 7 回、`finalize` の流れで、同じく `-scaled` と縮小版 6 種だけが残った。由来確認用の `_wp_sideloaded_file` が 1 行残る(Fable の見立てどおり。無害)。
 - `wp media regenerate` → `-scaled-scaled` はできず、`original_image` も戻らない。REST の回転 → `-scaled-edited.jpg`(2560x1829)の新しい添付ができた。
 - 片づけ: 試験の添付・下書き・一時ユーザを消した。ユーザは `takano32` と `ftsf` だけ。
+
+---
+
+## 2026-10-24 かんたん編集画面の設計案(T.36.1。Fable)
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-24 | ユーザ質問 | 「きちんと ftsf はユーザ名なの？」→ `user_login` は `ftsf`(ID 4、表示名も ftsf)、特権管理者、`ftsf.dp.no32.tk` の administrator と確認 |
+| 2026-10-24 | ユーザ依頼 | 「編集画面は仕様の操作できるようにして、画像とかドラッグアンドドロップだし、その他もいい感じにしたいよ」「Fable max」 |
+| 2026-10-24 | ユーザ要望 | 「安定したプラグインとかCDNにあるJSとか活用したい気がする」「できるんだったらAstro とかのビルドしてデプロイの仕組み載せたりできないかね？」 |
+
+- 設計案は `docs/owner-editor-design.md`(提案)。決めごと Q1〜Q21 を選択式で聞く。
+- 注意: `ftsf` は特権管理者なので、持ち主から見た画面の確認には権限の小さい試験用アカウントが要る。
