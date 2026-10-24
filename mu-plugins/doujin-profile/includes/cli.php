@@ -276,14 +276,14 @@ class Doujin_Profile_CLI {
 			$check = wpmu_validate_user_signup( $name, $email );
 			if ( $check['errors']->has_errors() ) {
 				$hint = username_exists( $name ) ? ' 既にいるユーザをこのサイトの持ち主にするなら --user=' . $name . ' を付けてください。' : '';
-				WP_CLI::error( 'ユーザを作れません: ' . implode( ' / ', $check['errors']->get_error_messages() ) . $hint );
+				WP_CLI::error( 'ユーザを作れません: ' . wp_strip_all_tags( implode( ' / ', $check['errors']->get_error_messages() ) ) . $hint );
 			}
 		}
 
 		// 2. サイト名。コアの検証 (禁止名・既存のサイト・ほかのユーザの名前の予約)。
 		$check = wpmu_validate_blog_signup( $name, $title, $user ? $user : '' );
 		if ( $check['errors']->has_errors() ) {
-			WP_CLI::error( 'サイトを作れません: ' . implode( ' / ', $check['errors']->get_error_messages() ) );
+			WP_CLI::error( 'サイトを作れません: ' . wp_strip_all_tags( implode( ' / ', $check['errors']->get_error_messages() ) ) );
 		}
 		$domain = $check['domain'];
 		$path   = $check['path'];
@@ -327,7 +327,7 @@ class Doujin_Profile_CLI {
 				wpmu_delete_user( $user->ID );
 				WP_CLI::log( "作ったユーザ {$name} は消しました。" );
 			}
-			WP_CLI::error( 'サイトを作れませんでした: ' . $blog_id->get_error_message() );
+			WP_CLI::error( 'サイトを作れませんでした: ' . wp_strip_all_tags( $blog_id->get_error_message() ) );
 		}
 		WP_CLI::log( "サイト {$url} (blog_id {$blog_id}) を作り、初期設定を施しました。" );
 
