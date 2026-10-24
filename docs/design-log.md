@@ -1498,3 +1498,14 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 
 - `wp_initialize_site` の処理で `add_option( doujin_profile_preparing, true )`(invite が入れた値は上書きしない。既存サイトには効かない)。退避のあと配備し、一時サイトで試して消す。
 - 結果: 退避のあと配備。管理画面の「新規追加」と同じ `wpmu_create_blog(…, array('public' => 1))` で一時サイト `dptest3`(blog_id 6、管理者 takano32)を作ると、`doujin_profile_preparing` = 1・home は https。ftsf には値が無い(公開のまま)。一時サイトは消した。
+
+## 2026-10-25 広告ブロッカーの検査
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-25 | ユーザ依頼 | 「どうもアドブロックで画像とかが撮れなかったりするらしいことが me のサイトで確認されてるっぽいので、アドブロックされないかチェックしてアドブロックされるようなら回避」(Adblock Plus) |
+
+- Fable が調べた。Adblock Plus 4.48.0 の CRX を展開して Chromium 156 に読み込み、日本語環境の既定(Japanese Filters+EasyList、ABP filters(anti-circumvention)、Acceptable Ads)で、本番のトップ・作品ページ・サンプルビューアを PC とスマホ幅で開いた。規則は `@ghostery/adblocker` で名指しした。
+- **本番は何も止まらず、何も隠れない**(書影・サンプル・販売先のボタン・`al.fanza.co.jp`/`dlaf.jp` のリンク・アフィリエイトの注記とも)。直しは無し。
+- `ftsf.me` と f_tsf(GitHub Pages)は**書影がすべて止まる**。Japanese Filters の `||doujin-assets.dmm.co.jp^$third-party`(他サイトからの DMM の画像の読み込みを止める)。doujin-profile は書影を取り込んで自サイトから出すので当たらない(spec §1.2 原則 4)。
+- 将来の注意: 画像のファイル名が `advert.*` や広告の寸法(`-728x90.` など)だと EasyList の汎用規則に当たる。実寸の書影・サンプルでは起きにくいので、記録だけ。
