@@ -1204,3 +1204,14 @@ Claude の整理(案。裁定待ち):
 戻し方: `wp plugin deactivate --network` → `wp plugin uninstall` の両方。それでも戻らなければ 1. のダンプを `wp db import`。
 
 結果: 両方をネットワーク有効化。`wp disable-comments settings --types=all --xmlrpc --rest-api` はメインサイトの設定(`wp_options`)に書いたが、ネットワーク有効のときにプラグインが読むのはネットワークの設定(`sitemeta`)なので、そちらへ移してメインサイトの設定は消した。確認: `dp.no32.tk`・`ftsf.dp.no32.tk` の「Hello world」でコメント欄なし・`X-Pingback` なし、`wp.getUsersBlogs` は 405「XML-RPC サービスが無効」、`pingback.ping` は受け付けない、トップとログイン画面は 200。自作の `mu-plugins/profile-site-hardening.php` はリポジトリから消した(旧ホストには残っている)。
+
+---
+
+## 2026-10-24 元の大きい画像の置き場所を調べた(T.51.1)
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-24 | ユーザ依頼 | 「いい感じに Fable とかに任せらんない？」→ 調査を Fable(読み取りだけ)に依頼 |
+
+- 結果は `docs/original-image-storage.md`。元の画像だけを外へ出せる配布プラグインは無い。配布物でできるのは「メディア全部を外へ」か「元を消す」。
+- 案を選択式で裁定待ち。
