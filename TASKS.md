@@ -87,8 +87,8 @@ doujin-profile の仕事と、決めることの一覧。**ここが台帳の正
     - [x] **T.32.3.5** さらに作品を見る(T.31.4)。2026-10-25 配備・確認済み
   - [ ] **T.32.4** スターターパターン
   - [x] **T.32.5** 新しいサイトの初期設定(`wp_initialize_site`。作成直後に URL を https にそろえる)。2026-10-25 配備(`wp doujin init-site` でも)
-  - [ ] **T.32.6** TT5 の子テーマ(f_tsf の配色)
-  - [ ] **T.32.7** head(説明文・OGP・JSON-LD・canonical)
+  - [x] **T.32.6** TT5 の子テーマ(f_tsf の配色)。2026-10-25 `themes/doujin-profile-tt5/` を配備し ftsf を切り替え
+  - [x] **T.32.7** head(説明文・OGP・JSON-LD・canonical)。2026-10-25 `includes/head.php` を配備(JSON-LD は作らない)
   - [x] **T.32.8** 年齢確認(成人向けのサイトだけ。確認はサブドメインごと)。2026-10-25 配備・確認済み(`includes/age-gate.php`)
   - [ ] **T.32.9** WP-CLI
     - [ ] **T.32.9.1** `wp doujin invite`
