@@ -49,7 +49,7 @@ wp core multisite-convert --title='プロファイル' --user=takano32
 - Multisite 用のテーブルを作り、`wp-config.php` の `stop editing` 行の前に定数を追記する。
 - `--user=takano32` を付けるのは、ネットワーク管理者の決定に「現在のユーザ」が使われるため。
 - **注意(コアの仕様)**: ネットワーク作成時点の administrator は全員が特権管理者になる。`takano32` と `ftsf` の両方が該当する。
-  `ftsf` の権限をどうするかは未裁定(spec D6)なので、この検証では変更しない。
+  `ftsf` の権限をどうするかは未裁定(spec T.6)なので、この検証では変更しない。
 
 ### 1.4 `.htaccess` の WordPress ブロックを Multisite 用に差し替え
 
@@ -169,7 +169,7 @@ curl -s -o /dev/null -w '%{http_code}\n' "https://profile.xwp.jp/?_cb=$RANDOM"  
 - **コアは、既存ユーザと同名のサイト名をそのユーザのために確保する。** 別のユーザとして `wpmu_validate_blog_signup('ftsf')` を呼ぶと「このサイト名は予約済みです」。
   「サイト名 = 持ち主のユーザ名」という設計と噛み合う。招待コマンドは持ち主を渡して検査する必要がある。
 - `f_tsf` はコアの検査で「サイト名には半角英字の小文字 (a-z) と半角数字のみを含められます」と拒否される(裁定 J4 のとおり)。
-- **ネットワーク作成時点の administrator は全員が特権管理者になる**(`takano32` と `ftsf`)。権限の強さは変換前と同じだが、spec の原則(特権管理者は運営者だけ)には反している → D6。
+- **ネットワーク作成時点の administrator は全員が特権管理者になる**(`takano32` と `ftsf`)。権限の強さは変換前と同じだが、spec の原則(特権管理者は運営者だけ)には反している → T.6。
 - 新しいサイトには、コアが `hello-world` と `sample-page` を入れる。サイトの作成者(`takano32`)も管理者として入る。どちらも Phase 1 の「サイトの初期設定」で整える対象。
 - ネットワーク設定の既定値のうち、**アップロード容量の検査は無効**、許可形式は画像以外も含む。Phase 1 で直す(environment.md §6)。
 - CloudSecure が無効になったので、`/?author=N` の遮断が外れ、XML-RPC も引き続き POST を受け付ける。ユーザ名は設計上も公開情報だが、XML-RPC は早めに止めたい(spec §10)。

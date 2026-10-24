@@ -7,6 +7,7 @@ doujin-profile は `https://profile.xwp.jp/<slug>/` にユーザごとの同人�
 
 | 文書 | 役割 | 書き方 |
 |---|---|---|
+| [`../TASKS.md`](../TASKS.md) | **仕事と未決の台帳**(T 番号) | 状態を `[ ]` `[~]` `[?]` `[x]` `[-]` で。完了した親タスクは大きくなったら `tasks/T.xx.md` へ移す |
 | [`spec.md`](spec.md) | 仕様の**現在形**。何を・どう作るか、要決定事項 | 裁定が出たら本文を更新し、末尾の改訂履歴に残す |
 | [`design-log.md`](design-log.md) | 設計の**過程**。いつ何を調べ、何を比べ、誰が何を決めたか | 追記のみ・時系列。裁定は「ユーザ裁定 YYYY-MM-DD」 |
 | [`environment.md`](environment.md) | 導入先で**実測した事実**と作業ガード | 確かめたことだけ。調査日と方法を明記 |
@@ -15,4 +16,4 @@ doujin-profile は `https://profile.xwp.jp/<slug>/` にユーザごとの同人�
 | [`caddy-front-trial.md`](caddy-front-trial.md) | 前段 Caddy + サブドメイン型 Multisite(`*.dp.no32.tk`)の仮運用の**手順・結果・戻し方** | 変更の前に手順と戻し方を書き、実施後に結果を足す |
 | [`hosting-research.md`](hosting-research.md) | **移転先ホスティングの調査**(成人向けコンテンツを許容する WordPress 環境) | 各社の公式ページの原文と出典。調査日を明記。規約は変わるので契約前に再確認 |
 
-読む順番: はじめてなら `spec.md` の §0(要約)→ `design-log.md`(なぜそうなったか)。本番を触る前に `environment.md` の §10。
+読む順番: いまの仕事は `TASKS.md`。はじめてなら `spec.md` の §0(要約)→ `design-log.md`(なぜそうなったか)。本番を触る前に `environment.md` の §10。
