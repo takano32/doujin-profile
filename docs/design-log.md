@@ -1414,3 +1414,7 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 
 前の値(戻し方): `upload_space_check_disabled` 1、`blog_upload_space` 100、`upload_filetypes` はコアの既定の長い一覧(jpg … pages)、`illegal_names` ["www","web","root","admin","main","invite","administrator","files"]。`wp network meta update 1 <キー> <前の値>` で戻す。
 変更: `upload_space_check_disabled` 0、`blog_upload_space` 1024、`upload_filetypes` を画像だけ「jpg jpeg jpe png gif webp avif heic heif」、`illegal_names` に dp・api・mail・ftp・cdn・static・assets・img・blog・help・support・test・staging・dev・doujin-profile を足す。ftsf の使用量は 44MB。`NOBLOGREDIRECT`(`wp-config.php` の定数)は今回は入れない。
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-25 | ユーザ裁定 | 「新しく招待したマンガ家さんのサイトは、最初から誰でも見られるようにしますか？」に「持ち主が自分で公開」(T.11)。招待直後は準備中、持ち主がマイページのボタンで公開する。準備中に戻すのは運営者(WP-CLI)。既存の ftsf は公開のまま |
