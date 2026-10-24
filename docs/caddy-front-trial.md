@@ -9,7 +9,7 @@
 | 前段 | e2-micro(`ssh takano32@35.212.198.233`、Caddy 2.6.2。`environment.md` §C) |
 | 裏側 | ターゲット `sakura`(`~/www/doujin-profile/`、WordPress 単一サイト・初期データだけ。`environment.md` §S) |
 | DNS | `dp.no32.tk` と `*.dp.no32.tk` は e2-micro を向いている(追加は要らない) |
-| 状態 | 段階 A・B・C は実施済み(2026-10-24、結果は §4)。ログインだけ未確認(§4 段階 C)(各段階の前に、サイト所有者の了承を得る) |
+| 状態 | 段階 A・B・C と `ask` は実施済み(2026-10-24、結果は §4)。ログインだけ未確認(§4 段階 C)(各段階の前に、サイト所有者の了承を得る) |
 
 名前: サーバ上に置くファイル・環境変数・ヘッダには、なるべく `doujin-profile` を入れる(ユーザ指示 2026-10-24「あとで忘れるでしょ」)。
 
@@ -189,3 +189,20 @@ Caddyfile の退避は `/etc/caddy/Caddyfile.bak-20261024-0357`(改名の直前)
 
 1. さくら: `cd ~/www/doujin-profile && wp db import ~/dumps/pre-multisite-20261024-1254/db.sql`、`cp -p ~/dumps/pre-multisite-20261024-1254/wp-config.php wp-config.php`、`cp -p ~/dumps/pre-multisite-20261024-1254/htaccess .htaccess`
 2. e2-micro: `sudo cp -p /etc/caddy/Caddyfile.bak-20261024-0350 /etc/caddy/Caddyfile`、`sudo rm -f /etc/caddy/doujin-profile.env /etc/systemd/system/caddy.service.d/doujin-profile.conf`、`sudo systemctl daemon-reload && sudo systemctl restart caddy`
+
+### `ask` を足した(2026-10-24 13:05 JST、ユーザ了承「2. やっていい」)
+
+Caddyfile の退避は `/etc/caddy/Caddyfile.bak-20261024-0400`。足したもの(既存のブロックはそのまま):
+
+- 先頭の全体設定: `on_demand_tls { ask http://localhost:5381/doujin-profile-tls-ask }`
+- 末尾に `http://localhost:5381`(127.0.0.1 だけで待ち受け)。`/doujin-profile-tls-ask?domain=<名前>` を受けると、`X-Doujin-Profile-Host: <名前>` を付けてさくらのトップページを取りに行き、**2xx なら 200、それ以外なら 404** を返す。サイトが無い名前は WordPress が登録ページへ 302 するので断られる。WordPress 側のコードは要らない。
+
+| 確認 | 結果 |
+|---|---|
+| `ask` に `dp.no32.tk` | 200 |
+| `ask` に存在しない名前 / `evil.example.com` / 空 | 404 |
+| 外から存在しない名前の `https://` | TLS の時点で失敗(証明書が出ない) |
+| サイト `dpask` を作って `https://dpask.dp.no32.tk/` | 200(証明書の取得込みで 4.9 秒)。確認後にサイトを消した |
+| `dp.no32.tk` / 同居サービス | 変わらず |
+
+戻し方: `sudo cp -p /etc/caddy/Caddyfile.bak-20261024-0400 /etc/caddy/Caddyfile && sudo systemctl reload caddy`。
