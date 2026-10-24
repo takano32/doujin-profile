@@ -10,10 +10,12 @@
  *   includes/cover-import.php    書影・サンプルの取り込み (作品番号から。唯一の独自 REST)
  *   includes/blocks.php          公開側の独自ブロックの登録と、描き方の共用関数 (ブロックの定義は src/blocks/)
  *   includes/patterns.php        パターン (プロフィールの見出し・トップページ)
+ *   includes/init-site.php       新しいサイトの初期設定 (wp_initialize_site。https・初期データの削除・トップページ)
+ *   includes/cli.php             WP-CLI (wp doujin init-site / import / export)
  *   src/                         JS のソース。build/ に手元でビルドしてコミットする (サーバに node は無い)
  *
  * Multisite ではネットワーク内の全サイトで読み込まれる。登録はどれもサイト単位 (init で毎回)。
- * 有効化フックは無いので、登録以外の初期化は持たない。PHP 8.0 互換で書く。
+ * 有効化フックは無いので、登録以外の初期化は持たない (サイト単位の初期設定はサイト作成時のフックで)。PHP 8.0 互換で書く。
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -31,3 +33,5 @@ require_once DOUJIN_PROFILE_DIR . '/includes/my-page.php';
 require_once DOUJIN_PROFILE_DIR . '/includes/cover-import.php';
 require_once DOUJIN_PROFILE_DIR . '/includes/blocks.php';
 require_once DOUJIN_PROFILE_DIR . '/includes/patterns.php';
+require_once DOUJIN_PROFILE_DIR . '/includes/init-site.php';
+require_once DOUJIN_PROFILE_DIR . '/includes/cli.php';

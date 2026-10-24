@@ -79,7 +79,8 @@ $doujin_wrapper = get_block_wrapper_attributes(
 			<div class="doujin-profile-viewer__bar">
 				<span class="doujin-profile-viewer__title"><?php echo esc_html( $doujin_title ); ?></span>
 				<output class="doujin-profile-viewer__count" aria-live="polite"></output>
-				<button type="button" class="doujin-profile-viewer__button" data-doujin-viewer="fullscreen" aria-label="全画面" title="全画面">⛶</button>
+				<?php // 全画面の記号は文字 (⛶) だとスマホで崩れるので、WordPress 同梱の @wordpress/icons の fullscreen を素の SVG で。 ?>
+				<button type="button" class="doujin-profile-viewer__button" data-doujin-viewer="fullscreen" aria-label="全画面" title="全画面"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false"><path d="M4.75 10V4.75H10M4.75 4.75L10 10M14 19.25H19.25V14M19.25 19.25L14 14" /></svg></button>
 				<button type="button" class="doujin-profile-viewer__button" data-doujin-viewer="close" aria-label="閉じる" title="閉じる (Esc)">×</button>
 			</div>
 			<div class="doujin-profile-viewer__stage" data-doujin-viewer="stage"></div>

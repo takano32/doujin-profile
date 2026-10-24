@@ -5,5 +5,5 @@
 		'wp-blocks',
 		'wp-server-side-render'
 	),
-	'version' => 'a4fb779bdaeddbc88d3a'
+	'version' => '59712a3f2e19021ecc10'
 );
