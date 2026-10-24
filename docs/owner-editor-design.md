@@ -155,3 +155,19 @@ spec の書き換えが要る箇所: §1.2 原則 4、§1.3、§2、§3.1、§6.
 - SortableJS: https://cdnjs.com/libraries/Sortable ・ FilePond: https://pqina.nl/filepond/docs/api/instance/properties/ ・ Uppy: https://uppy.io/docs/uppy/
 - Astro: https://docs.astro.build/en/concepts/why-astro/ ・ vite-for-wp: https://github.com/kucrut/vite-for-wp
 - さくら 国外 IP アドレスフィルタ: https://help.sakura.ad.jp/rs/2234/
+
+## 9. 書影の取り込みの下調べ(T.36.4、2026-10-24)
+
+さくらのサーバから `curl` で確かめた(読むだけ。f_tsf の実在の作品番号を使った)。
+
+| | FANZA(cid 例 `d_737824`) | DLsite(作品番号 例 `RJ01634826`) |
+|---|---|---|
+| 書影の画像 | `https://doujin-assets.dmm.co.jp/digital/comic/<cid>/<cid>pl.jpg` → 200(約 100KB)。年齢確認なしで取れる | 作品情報の JSON の `work_image`(例 `//img.dlsite.jp/modpub/images2/work/doujin/RJ01635000/RJ01634826_img_main.jpg`)→ 200(約 200KB)。番号から組むより JSON を読むほうが確実(予告作品の `ann` の規則では 404 だった) |
+| 作品情報 | 作品ページは年齢確認の画面へ 302。Cookie `age_check_done=1` を付けると 200。`og:title` は無く、`og:image` は `<cid>pr.jpg` | `https://www.dlsite.com/maniax/product/info/ajax?product_id=<番号>` → 200 の JSON。`work_name`(題名)・`work_image`・`regist_date`(発売日)・`site_id`・`maker_id` がある |
+| 販売ページの URL | `https://www.dmm.co.jp/dc/doujin/-/detail/=/cid=<cid>/` | `https://www.dlsite.com/<site_id>/work/=/product_id/<番号>.html`(予告の URL は 301 でここへ) |
+
+分かったこと:
+- どちらも、さくらから画像が取れる。地域の制限には当たらなかった(さくらは国内)。
+- 取り込みボタンは「番号から URL を組む → `media_sideload_image()` でメディアに保存 → アイキャッチに → 販売先リンクに URL を足す」で作れる(コア標準の関数)。DLsite は JSON から題名と発売日も埋められる。FANZA は画像とリンクだけ(題名は手で入れる)。
+- 決めていないこと: アフィリエイトのリンク(f_tsf は FANZA が `al.fanza.co.jp` の `af_id`、DLsite が `dlaf.jp` の `aid`)。取り込みで埋めるのは素の URL にし、アフィリエイトの ID は持ち主ごとの設定で包むかどうかを後で決める。
+- 相手の URL の規則が変わると取り込みが失敗する(表示は壊れない。取り込み済みの画像はサイトにある)。そのときは手でドロップすればよい。
