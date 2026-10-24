@@ -1478,3 +1478,9 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 - 原因: `no32.tk` はワイルドカード `*.no32.tk`(35.212.198.233)で `dp.no32.tk` とその下を受けていた。`dp.no32.tk` に TXT を足したことで `dp.no32.tk` が実在の名前になり、ワイルドカードが効かなくなった(RFC 4592 の最も近い祖先の規則)。Claude が SPF を案内したとき、ワイルドカードとの関係を確かめなかった。
 - 直し(サイト所有者に依頼): Value-Domain に `a dp 35.212.198.233` と `a *.dp 35.212.198.233` を足す(TXT は残す)。
 - メール: SMTP 認証は初期ドメインの `noreply@tsff.sakura.ne.jp` で通る(`noreply@dp.no32.tk` では 535。`dp.no32.tk` はさくらに未登録とみられる)。`WPMS_SMTP_USER` を初期ドメインに変えた。差出人 `noreply@dp.no32.tk` は「Domain of sender address … does not exist」(553 5.1.8)で断られた(A も MX も引けないため)。WP Mail SMTP 4.10.3 はネットワーク有効化済み。
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-25 | ユーザ作業 | 「入れたわ」→ `dp.no32.tk`・`*.dp.no32.tk` の A(35.212.198.233)が Value-Domain と 8.8.8.8 で引け、`https://dp.no32.tk/`・`https://ftsf.dp.no32.tk/` とも 200 に戻った。TXT(SPF)も残っている |
+
+- 復旧のあと、WP Mail SMTP(ユーザ `noreply@tsff.sakura.ne.jp`、差出人と Return-Path `noreply@dp.no32.tk`)で `+dptest` に試験メールを送った: `wp_mail` が true(さくらの SMTP が受け付けた)。届いたかはサイト所有者に確認中。注意: `dp.no32.tk` に MX が無いので、もし Gmail に断られてもエラーメールはどこにも戻らない。
