@@ -1,0 +1,115 @@
+/*
+ * 作品カード。色・大きさ・余白はテーマに任せ、ここは並びと、サンプルビューア (全画面の覆い) の最小限だけ。
+ */
+
+.doujin-profile-work-card__cover img {
+	display: block;
+	height: auto;
+	max-width: 100%;
+}
+
+.doujin-profile-work-card__upcoming {
+	border: 1px solid currentColor;
+	border-radius: 0.25em;
+	font-size: 0.8em;
+	padding: 0 0.4em;
+}
+
+.doujin-profile-work-card__shops > .wp-block-button {
+	width: 100%;
+}
+
+.doujin-profile-work-card__shops > .wp-block-button > .wp-block-button__link {
+	width: 100%;
+}
+
+.doujin-profile-editor-notice {
+	border: 1px dashed currentColor;
+	opacity: 0.7;
+	padding: 0.5em 1em;
+}
+
+/* サンプルビューア: 黒い全画面の覆い。右から左へめくる (1 ページ目が右)。 */
+
+.doujin-profile-viewer {
+	background: #000;
+	border: 0;
+	color: #fff;
+	height: 100vh;
+	height: 100dvh;
+	margin: 0;
+	max-height: none;
+	max-width: none;
+	padding: 0;
+	width: 100vw;
+}
+
+.doujin-profile-viewer[open] {
+	display: flex;
+	flex-direction: column;
+}
+
+.doujin-profile-viewer::backdrop {
+	background: #000;
+}
+
+.doujin-profile-viewer__bar,
+.doujin-profile-viewer__nav {
+	align-items: center;
+	display: flex;
+	flex: none;
+	gap: 0.5em;
+	padding: 0.5em 0.75em;
+}
+
+.doujin-profile-viewer__title {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.doujin-profile-viewer__count {
+	font-variant-numeric: tabular-nums;
+}
+
+.doujin-profile-viewer__button {
+	background: none;
+	border: 1px solid currentColor;
+	border-radius: 0.25em;
+	color: inherit;
+	cursor: pointer;
+	font: inherit;
+	line-height: 1;
+	min-width: 2.5em;
+	padding: 0.4em 0.6em;
+}
+
+.doujin-profile-viewer__range {
+	flex: 1;
+	min-width: 0;
+}
+
+.doujin-profile-viewer__stage {
+	align-items: center;
+	display: flex;
+	flex: 1;
+	flex-direction: row-reverse; /* DOM の先 (若いページ) が右に来る */
+	justify-content: center;
+	min-height: 0;
+	touch-action: pan-y;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.doujin-profile-viewer__stage img {
+	height: 100%;
+	max-width: 100%;
+	object-fit: contain;
+	width: auto;
+}
+
+.doujin-profile-viewer__stage.is-spread img {
+	max-width: 50%;
+}

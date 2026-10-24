@@ -1,5 +1,5 @@
 /**
- * プロフィール: サークル名 (blogname)・リード文 (blogdescription)・アイコン (site_icon)。
+ * プロフィール: サークル名 (blogname)・リード文 (blogdescription)・アイコン (site_icon。サイトロゴ site_logo にも同じ画像)。
  * どれもコアが REST の wp/v2/settings に載せている項目で、独自の設定は無い (spec §6.0)。
  */
 
@@ -25,7 +25,13 @@ import { useSiteSave } from './site';
 export function ProfileCard() {
 	const [ title, setTitle ] = useEntityProp( 'root', 'site', 'title' );
 	const [ description, setDescription ] = useEntityProp( 'root', 'site', 'description' );
-	const [ iconId, setIconId ] = useEntityProp( 'root', 'site', 'site_icon' );
+	const [ iconId, setSiteIcon ] = useEntityProp( 'root', 'site', 'site_icon' );
+	// サイトロゴ (site_logo) も同じ画像にする。公開側の「プロフィールの見出し」はコアのサイトロゴブロックで出すため (includes/patterns.php)。
+	const [ , setSiteLogo ] = useEntityProp( 'root', 'site', 'site_logo' );
+	const setIconId = ( id ) => {
+		setSiteIcon( id );
+		setSiteLogo( id );
+	};
 	const icon = useSelect( ( select ) => ( iconId ? select( coreStore ).getMedia( iconId ) : null ), [ iconId ] );
 	const { isLoaded, hasEdits, isSaving, save, notice, clearNotice } = useSiteSave();
 
