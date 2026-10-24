@@ -1136,3 +1136,15 @@ Claude の整理(案。裁定待ち):
 - WordPress のネットワーク設定 `fileupload_maxk` を 1500 → 32768(32MB)にした(`wp network meta update 1 fileupload_maxk 32768`。戻すときは 1500)。
 - 実際の上限は PHP 側(いまは 5MB)。さくらでは `~/www/php.ini`(`~/.php.config/php.ini` はそこへのリンク。コントロールパネルの PHP の設定で作られる)で決まり、`~/www/` 全体 = 同居サイトにも効くので、Claude は触らずサイト所有者の作業にした(T.31.5.1.1)。推奨値: `upload_max_filesize = 32M`、`post_max_size = 40M`、`memory_limit = 256M`、`max_execution_time = 60`。
 - 縮小は本体の既定(長辺 2560px を超えたら縮める)のまま。
+
+---
+
+## 2026-10-24 PHP の上限を上げ、大きい画像が自動で縮むことを確認(T.31.5)
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-24 | ユーザ作業 | 「SSH で vim った」→ 効かず。「保存してみた」(コントロールパネルの PHP の設定から) → 効いた |
+
+- さくらの利用者用 php.ini(`~/www/php.ini`。`~/.php.config/php.ini` はそこへのリンク)は、**コントロールパネルから保存したときに反映される**。SSH で置いただけでは Web 側の値は変わらなかった。保存し直すと、権限は 600 になった。Web 側で `upload_max_filesize` 32M・`post_max_size` 40M・`memory_limit` 256M・`max_execution_time` 60 を確認(確認用の PHP は一時的に置いてすぐ消した)。
+- 試験: 手元で作った 24.5MB・4000x5600 の `hogehoge001.jpg` を、一時ユーザのアプリケーションパスワードで REST から上げた(Caddy 経由で約 11 秒、201)。本体の既定どおり、長辺 2560px の `hogehoge001-scaled.jpg`(1829x2560、0.9MB)が表示用になり、縮小版 6 種もできた。**元の 24.5MB の画像もサーバに残る**(本体の既定。ディスクは 300GB あるので当面は問題ない)。
+- 片づけ: 試験の画像(`wp post delete --force` でファイルごと)と一時ユーザを消した。

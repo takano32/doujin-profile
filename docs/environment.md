@@ -83,7 +83,7 @@ ssh tsff@doujin-profile.no32.tk        # 直接入るとき。ポート 22、鍵
 
 テーブル接頭辞は `wp`(アンダースコア無し。表は `wpposts` など)。Multisite のサイト別の表は `wp2posts` のような名前になる。
 
-PHP の値(CLI で確認。Web 側の値は未確認): `upload_max_filesize` 5M、`post_max_size` 8M。マンガの画像を上げるには小さいかもしれない。
+PHP の値(Web 側、2026-10-24): 当初は `upload_max_filesize` 5M・`post_max_size` 8M・`memory_limit` 128M・`max_execution_time` 30。サイト所有者が `~/www/php.ini` で 32M / 40M / 256M / 60 に上げた。**さくらの利用者用 php.ini は、コントロールパネルの PHP の設定から保存したときに反映される**(SSH でファイルを置いただけでは効かなかった)。`~/www/` 全体(同居サイトにも)効く。PHP は Apache 組み込み(`apache2handler`)。画像処理は Imagick。
 
 ### S.6 未検証・気になる点
 
