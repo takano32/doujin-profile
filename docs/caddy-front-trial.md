@@ -9,7 +9,7 @@
 | 前段 | e2-micro(`ssh takano32@35.212.198.233`、Caddy 2.6.2。`environment.md` §C) |
 | 裏側 | ターゲット `sakura`(`~/www/doujin-profile/`、WordPress 単一サイト・初期データだけ。`environment.md` §S) |
 | DNS | `dp.no32.tk` と `*.dp.no32.tk` は e2-micro を向いている(追加は要らない) |
-| 状態 | 段階 A・B・C と `ask` は実施済み(2026-10-24、結果は §4)。ログインも確認済み(§4)(各段階の前に、サイト所有者の了承を得る) |
+| 状態 | T.27.2・B・C と `ask` は実施済み(2026-10-24、結果は §4)。ログインも確認済み(§4)(各段階の前に、サイト所有者の了承を得る) |
 
 名前: サーバ上に置くファイル・環境変数・ヘッダには、なるべく `doujin-profile` を入れる(ユーザ指示 2026-10-24「あとで忘れるでしょ」)。
 
@@ -29,7 +29,7 @@
 - WordPress には `wp-config.php` の数行で、秘密が一致したときだけ `X-Doujin-Profile-Host` を `HTTP_HOST` に、`X-Doujin-Profile-Client-IP` を `REMOTE_ADDR` に入れる。Multisite はその `HTTP_HOST` でサイトを見分ける(コア標準のサブドメイン型)。
 - 仮運用では、経路が日本 → 米国 → 日本になるので遅い。本番では Caddy を国内に置く。
 
-## 1. 段階 A: さくらの nginx がヘッダを通すかの確認(変更は一時ファイル 1 つ)
+## 1. T.27.2: さくらの nginx がヘッダを通すかの確認(変更は一時ファイル 1 つ)
 
 ```sh
 # 確認用の PHP を置く(名前は推測されにくいものにする)
@@ -49,7 +49,7 @@ scripts/remote.sh 'rm -f doujin-profile-header-probe-XXXX.php'    # 確認した
 見ること: `HTTP_X_DOUJIN_PROFILE_HOST` が届くか、`REMOTE_ADDR` が何になるか(さくらの nginx の IP か、送り元の IP か)、`HTTPS` が `on` か。
 戻し方: ファイルを消すだけ。
 
-## 2. 段階 B: Caddy の設定(e2-micro)
+## 2. T.27.3: Caddy の設定(e2-micro)
 
 ```sh
 sudo cp -p /etc/caddy/Caddyfile /etc/caddy/Caddyfile.bak-$(date +%Y%m%d-%H%M)
@@ -81,7 +81,7 @@ dp.no32.tk, *.dp.no32.tk {
 
 戻し方: 退避した Caddyfile を戻して `sudo systemctl reload caddy`。
 
-## 3. 段階 C: さくらの WordPress をサブドメイン型の Multisite に
+## 3. T.27.4: さくらの WordPress をサブドメイン型の Multisite に
 
 1. 退避: `~/dumps/<日時>/` に DB・`wp-config.php`・`.htaccess`(700)。
 2. `wp-config.php` の先頭近く(`ABSPATH` の定義より前)に、前段のヘッダを受け取る数行と `DOUJIN_PROFILE_PROXY_SECRET` を足す:
@@ -106,7 +106,7 @@ dp.no32.tk, *.dp.no32.tk {
 
 ## 4. 結果
 
-### 段階 A(2026-10-24 12:43 JST、ユーザ了承「A いいよ」)
+### T.27.2(2026-10-24 12:43 JST、ユーザ了承「A いいよ」)
 
 確認用の PHP(推測されにくい名前)を `~/www/doujin-profile/` に置き、3 通りに送って、すぐ消した(消したあとは 404)。
 
@@ -118,12 +118,12 @@ dp.no32.tk, *.dp.no32.tk {
 
 分かったこと:
 
-- **独自のヘッダは PHP まで届く。** 段階 C の `wp-config.php` の受け取り方で成り立つ。
+- **独自のヘッダは PHP まで届く。** T.27.4 の `wp-config.php` の受け取り方で成り立つ。
 - `REMOTE_ADDR` は、さくらの nginx に直接つないだ相手の IP になる(さくらが置き換えている)。前段を通すと Caddy の IP になるので、訪問者の IP は `X-DP-Client-IP` で受け取る必要がある。
 - **送った `X-Forwarded-For` は PHP に届かなかった**(さくらの nginx が消している)。標準的な `X-Forwarded-For` には頼れず、独自のヘッダで渡すのが正しい。
 - 秘密に加えて「`REMOTE_ADDR` が Caddy の IP であること」も条件にできる(ただし本番で Caddy の IP が変わると直す場所が増えるので、秘密を主にする)。
 
-### 段階 B(2026-10-24 12:50 JST、ユーザ了承「B を進めて良い」)
+### T.27.3(2026-10-24 12:50 JST、ユーザ了承「B を進めて良い」)
 
 e2-micro で行ったこと:
 
@@ -140,10 +140,10 @@ e2-micro で行ったこと:
 - `caddy validate` は通った(「整形されていない」の警告は以前から)。
 - `https://dp.no32.tk/` は 200 で、`~/www/doujin-profile/` の WordPress(タイトル「同人プロフィール」)が返った。証明書は on-demand で Let's Encrypt から取れた(初回アクセスで約 4 秒)。
 - 同居サービスの `e2-micro.no32.tk` は変更前と同じ応答(`/` は 404)。
-- 予想どおりの警告: 「on-demand TLS is enabled, but no protections are in place」。段階 C のあとで `ask` を足して解消する。
-- WordPress はまだ単一サイトで `home` が `http://doujin-profile.no32.tk` なので、ページ内のリンクは `doujin-profile.no32.tk` を指す。段階 C で直る。
+- 予想どおりの警告: 「on-demand TLS is enabled, but no protections are in place」。T.27.4 のあとで `ask` を足して解消する。
+- WordPress はまだ単一サイトで `home` が `http://doujin-profile.no32.tk` なので、ページ内のリンクは `doujin-profile.no32.tk` を指す。T.27.4 で直る。
 
-### 段階 C(2026-10-24 12:54〜13:00 JST、ユーザ了承「C を進めてよい」)
+### T.27.4(2026-10-24 12:54〜13:00 JST、ユーザ了承「C を進めてよい」)
 
 | 変更 | 内容 |
 |---|---|
@@ -185,7 +185,7 @@ e2-micro で行ったこと:
 
 Caddyfile の退避は `/etc/caddy/Caddyfile.bak-20261024-0357`(改名の直前)。改名のあとも、`dp.no32.tk` は 200、同居サービスは変わらず、存在しないサブドメインは登録ページへ(= ヘッダが届いている)。
 
-### 戻し方(段階 B・C をまとめて)
+### 戻し方(T.27.3・C をまとめて)
 
 1. さくら: `cd ~/www/doujin-profile && wp db import ~/dumps/pre-multisite-20261024-1254/db.sql`、`cp -p ~/dumps/pre-multisite-20261024-1254/wp-config.php wp-config.php`、`cp -p ~/dumps/pre-multisite-20261024-1254/htaccess .htaccess`
 2. e2-micro: `sudo cp -p /etc/caddy/Caddyfile.bak-20261024-0350 /etc/caddy/Caddyfile`、`sudo rm -f /etc/caddy/doujin-profile.env /etc/systemd/system/caddy.service.d/doujin-profile.conf`、`sudo systemctl daemon-reload && sudo systemctl restart caddy`
