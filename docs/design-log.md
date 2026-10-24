@@ -814,3 +814,19 @@ Claude の推奨: **当面非公開なら、CNAME 委任でのワイルドカー
 
 - `https://dp.no32.tk/` が Caddy 経由で `~/www/doujin-profile/` の WordPress を返すようになった。証明書は on-demand で取れた。同居サービスは変わらず。詳細と戻し方は `caddy-front-trial.md` §4。
 - 次は段階 C(サブドメイン型の Multisite への変換)。
+
+---
+
+## 2026-10-24 段階 C: サブドメイン型の Multisite になった。ログインはさくらの国外 IP フィルタで止まる
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-24 | ユーザ了承 | 「C を進めてよい」 |
+| 2026-10-24 | ユーザ指示 | 「Caddy の設定とかファイルの名前は doujin-profile をなるべく使ってほしい」「あとで忘れるでしょ」 → `AGENTS.md` の約束に足した |
+
+- `~/www/doujin-profile/` はサブドメイン型の Multisite になり、ネットワークは `https://dp.no32.tk/`。試しのサイト `https://dptest.dp.no32.tk/` は Caddy 経由で表示でき、REST API での画像のアップロードも通った。
+- **ログインは 403**。e2-micro(米国)から `wp-login.php`・`wp-admin/` に届くと、さくらの nginx が拒む(国内からは通る)。さくらの「国外 IP アドレスフィルタ」と見られる。仮運用のあいだはフィルタを切る必要がある(コントロールパネルの操作なので、サイト所有者にお願いする)。本番で Caddy を国内に置けば起きない。
+- WP-CLI で作ったサイトの URL は `http://` で登録される。招待コマンドでは作成直後に https にそろえる。
+- サーバ上の名前(Caddy の環境変数ファイル・systemd の上書き・ヘッダ・`wp-config.php` の定数)を `doujin-profile` 入りに改めた。それより前の記録に出てくる `X-DP-*`・`DP_PROXY_SECRET`・`dp-proxy.*` は旧名。
+- 一時ユーザ・試しのサイトは消した。詳細と戻し方は `caddy-front-trial.md` §4。
+- 型がサブドメイン型になったので、spec(要件 R1 の `/<名前>/`、§4 の構成)の改訂が要る。ログインまで確かめてから行う。
