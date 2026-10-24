@@ -91,7 +91,7 @@ doujin-profile の仕事と、決めることの一覧。**ここが台帳の正
   - [x] **T.32.7** head(説明文・OGP・JSON-LD・canonical)。2026-10-25 `includes/head.php` を配備(JSON-LD は作らない)
   - [x] **T.32.8** 年齢確認(成人向けのサイトだけ。確認はサブドメインごと)。2026-10-25 配備・確認済み(`includes/age-gate.php`)
   - [ ] **T.32.9** WP-CLI
-    - [~] **T.32.9.1** `wp doujin invite`。2026-10-25 配備済み。本番での試験はサイト所有者の了承待ち
+    - [~] **T.32.9.1** `wp doujin invite`。2026-10-25 配備し、一時サイト dptest で試験済み(片づけ済み)。メールが届くかはサイト所有者の確認待ち、SPF の TXT はサイト所有者が DNS に入れる 👤
     - [x] **T.32.9.2** `wp doujin import` / `export`。2026-10-25 配備・確認済み
     - [x] **T.32.9.3** `wp doujin publish`。2026-10-25 配備済み
     - [x] **T.32.9.4** `wp doujin doctor`。2026-10-25 配備。ネットワークと ftsf で NG 0
