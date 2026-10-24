@@ -1393,3 +1393,13 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 - Claude が書いた(`includes/age-gate.php`、約 100 行)。成人向けの印が付いたサイトだけ、公開ページで f_tsf と同じ文言の「年齢確認」を `<dialog>` で出す。確認済みは localStorage(`doujin_profile_age_ok_v1`、サブドメインごと)。「いいえ」で本文を消して戻る。Esc では閉じない。確認が済むまで本文は `visibility: hidden`(head で判定してちらつきを防ぐ)。HTML には本文をそのまま出すので、JS の無い検索エンジンには普通のページに見える(「広報なんだから載せろ」)。そのサイトを編集できる人には出さない。
 - 成人向けの書影が年齢確認なしで見られる状態だったので、急いで配備した(所有者「年齢確認は必要だよね」)。
 - 確認: `ftsf.dp.no32.tk` で年齢確認が出て本文は隠れる → 「はい」で消え、読み込み直しても出ない。作品ページにも出る。メインサイトには出ない。`curl` の HTML には作品が入っている。
+
+## 2026-10-25 子テーマ doujin-profile-tt5(T.32.6)と head(T.32.7)を配備し、ftsf を切り替える(ユーザ了承)
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-25 | ユーザ了承 | 「ftsf さんのサイトを、この子テーマに切り替えますか？」に「切り替える」 |
+
+- Fable が作った(子テーマは theme.json 中心で 210 行、PHP なし。head は 120 行。JSON-LD は作らない)。手元の Docker(WP 7.1.3 / PHP 8.3)で f_tsf のデータを入れて確かめた。`data/f_tsf.json` の `theme` を子テーマに直した(import でテーマが戻る罠)。
+- 手順(実行前に記す): 退避 `~/dumps/pre-doujin-profile-theme-20261025/` → `scripts/deploy.sh --go`(head)→ `scripts/deploy.sh --themes --go` → `wp theme enable doujin-profile-tt5 --network` → `wp theme activate doujin-profile-tt5 --url=https://ftsf.dp.no32.tk`(メインサイトは TT5 のまま)。
+- 戻し方: `wp theme activate twentytwentyfive --url=…` → `wp theme disable doujin-profile-tt5 --network` → テーマのディレクトリを消す。
