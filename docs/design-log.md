@@ -1070,3 +1070,18 @@ Claude の推奨: **当面非公開なら、CNAME 委任でのワイルドカー
 
 - WordPress 本体にはログイン試行回数の制限が無い。wordpress.org の公式一覧(2026-10-24 確認): Limit Login Attempts Reloaded 3.3.10(100 万以上、WP 7.1.3 まで確認済み、説明書に Multisite 対応)、Loginizer 2.1.2(100 万以上、WP 7.1.3 まで確認済み)。
 - 提案: Limit Login Attempts Reloaded を入れてネットワークで有効化。自作はしない(T.50)。入れるかはサイト所有者の了承待ち。
+
+---
+
+## 2026-10-24 Limit Login Attempts Reloaded を入れた(T.50)
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-24 | ユーザ了承 | 「実施してよい」 |
+
+- 退避: `~/dumps/pre-doujin-profile-login-limit-20261024-1350/db.sql`。
+- `wp plugin install limit-login-attempts-reloaded --activate-network`(3.3.10)。設定は既定のまま。
+- 試験: 一時ユーザで、Caddy 経由でわざと間違えた。4 回目で締め出しの表示、そのあとは正しいパスワードでも入れない。記録(`limit_login_lockouts` ほか、ネットワークのオプション)は手元の本当の IP で残った = 前段のヘッダで渡した `REMOTE_ADDR` がそのまま使われている。
+- 片づけ: 試験の記録から手元の IP を消し、一時ユーザを消した。ユーザは `takano32` と `ftsf` だけ。
+- 戻し方: `wp plugin deactivate limit-login-attempts-reloaded --network && wp plugin delete limit-login-attempts-reloaded`。
+- 次はサイト所有者の追加の仕様を読む(T.31)。
