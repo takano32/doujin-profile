@@ -803,3 +803,14 @@ Claude の推奨: **当面非公開なら、CNAME 委任でのワイルドカー
 - 前段の Caddy は on-demand TLS で、サイトごとに証明書を取る。いまの Caddy 2.6.2 のままでよく、DNS の追加も要らない。
 - ワイルドカード証明書(CNAME 委任)は採らない。必要になれば後から乗り換えられる(WordPress 側には影響しない)。
 - 濫用(任意の名前で発行を起こされる)への備えとして、Multisite ができたら、存在するサイトにだけ発行する `ask` を足す(`caddy-front-trial.md` §2)。
+
+---
+
+## 2026-10-24 段階 B: Caddy に `*.dp.no32.tk` を足した
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-24 | ユーザ了承 | 「B を進めて良い」 |
+
+- `https://dp.no32.tk/` が Caddy 経由で `~/www/doujin-profile/` の WordPress を返すようになった。証明書は on-demand で取れた。同居サービスは変わらず。詳細と戻し方は `caddy-front-trial.md` §4。
+- 次は段階 C(サブドメイン型の Multisite への変換)。

@@ -9,7 +9,7 @@
 | 前段 | e2-micro(`ssh takano32@35.212.198.233`、Caddy 2.6.2。`environment.md` §C) |
 | 裏側 | ターゲット `sakura`(`~/www/doujin-profile/`、WordPress 単一サイト・初期データだけ。`environment.md` §S) |
 | DNS | `dp.no32.tk` と `*.dp.no32.tk` は e2-micro を向いている(追加は要らない) |
-| 状態 | 段階 A は実施済み(2026-10-24、結果は §4)。B・C は未実施(各段階の前に、サイト所有者の了承を得る) |
+| 状態 | 段階 A・B は実施済み(2026-10-24、結果は §4)。C は未実施(各段階の前に、サイト所有者の了承を得る) |
 
 秘匿値の扱い: Caddy とさくらのあいだの共有の秘密(下の `DP_PROXY_SECRET`)は、サーバの上にだけ置く。リポジトリ・チャットには書かない。
 
@@ -120,3 +120,23 @@ dp.no32.tk, *.dp.no32.tk {
 - `REMOTE_ADDR` は、さくらの nginx に直接つないだ相手の IP になる(さくらが置き換えている)。前段を通すと Caddy の IP になるので、訪問者の IP は `X-DP-Client-IP` で受け取る必要がある。
 - **送った `X-Forwarded-For` は PHP に届かなかった**(さくらの nginx が消している)。標準的な `X-Forwarded-For` には頼れず、独自のヘッダで渡すのが正しい。
 - 秘密に加えて「`REMOTE_ADDR` が Caddy の IP であること」も条件にできる(ただし本番で Caddy の IP が変わると直す場所が増えるので、秘密を主にする)。
+
+### 段階 B(2026-10-24 12:50 JST、ユーザ了承「B を進めて良い」)
+
+e2-micro で行ったこと:
+
+| 変更 | 内容 | 戻し方 |
+|---|---|---|
+| Caddyfile の退避 | `/etc/caddy/Caddyfile.bak-20261024-0350` | これを `/etc/caddy/Caddyfile` に戻す |
+| 合言葉 | `/etc/caddy/dp-proxy.env`(root の 600。`DP_PROXY_SECRET=…`)。値は画面にも出していない | ファイルを消す |
+| systemd の上書き | `/etc/systemd/system/caddy.service.d/dp-proxy.conf`(`EnvironmentFile=/etc/caddy/dp-proxy.env`) | ファイルを消して `sudo systemctl daemon-reload` |
+| Caddyfile | 末尾に `dp.no32.tk, *.dp.no32.tk` のブロック(§2 のとおり)を足した。既存の 2 つのブロックはそのまま | 退避を戻す |
+| 反映 | 環境変数を読ませるため reload ではなく `restart`(同居サービスは数秒止まった) | `sudo systemctl restart caddy` |
+
+確かめたこと:
+
+- `caddy validate` は通った(「整形されていない」の警告は以前から)。
+- `https://dp.no32.tk/` は 200 で、`~/www/doujin-profile/` の WordPress(タイトル「同人プロフィール」)が返った。証明書は on-demand で Let's Encrypt から取れた(初回アクセスで約 4 秒)。
+- 同居サービスの `e2-micro.no32.tk` は変更前と同じ応答(`/` は 404)。
+- 予想どおりの警告: 「on-demand TLS is enabled, but no protections are in place」。段階 C のあとで `ask` を足して解消する。
+- WordPress はまだ単一サイトで `home` が `http://doujin-profile.no32.tk` なので、ページ内のリンクは `doujin-profile.no32.tk` を指す。段階 C で直る。
