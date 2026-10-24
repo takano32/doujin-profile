@@ -40,7 +40,7 @@ ssh tsff@doujin-profile.no32.tk        # 直接入るとき。ポート 22、鍵
 └── (dumps/ はまだ無い)
 ```
 
-- 配備先は `~/www/doujin-profile/wp-content/mu-plugins/`(`scripts/deploy.sh`)。dry-run では、このディレクトリを作って `profile-site-hardening.php` を送る、という一覧になった。
+- 配備先は `~/www/doujin-profile/wp-content/mu-plugins/`(`scripts/deploy.sh`)。dry-run では、このディレクトリを作って `profile-site-hardening.php` を送る、という一覧になった(2026-10-24 にこの mu-plugin はやめ、配布物のプラグインに。spec §10.3)。
 - `~/www/doujin-profile/` の外には触れない。rsync の `--delete` は使わない(宛先の 2 つ上に `wp-config.php` がある)。
 
 ### S.3 ツール
