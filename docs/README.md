@@ -10,6 +10,7 @@ doujin-profile は `https://profile.xwp.jp/<slug>/` にユーザごとの同人�
 | [`../TASKS.md`](../TASKS.md) | **仕事と未決の台帳**(T 番号) | 状態を `[ ]` `[~]` `[?]` `[x]` `[-]` で。完了した親タスクは大きくなったら `tasks/T.xx.md` へ移す |
 | [`spec.md`](spec.md) | 仕様の**現在形**。何を・どう作るか、要決定事項 | 裁定が出たら本文を更新し、末尾の改訂履歴に残す |
 | [`design-log.md`](design-log.md) | 設計の**過程**。いつ何を調べ、何を比べ、誰が何を決めたか | 追記のみ・時系列。裁定は「ユーザ裁定 YYYY-MM-DD」 |
+| [`original-image-storage.md`](original-image-storage.md) | 元の大きい画像の置き場所の調査(T.51) | 調査日 2026-10-24 |
 | [`environment.md`](environment.md) | 導入先で**実測した事実**と作業ガード | 確かめたことだけ。調査日と方法を明記 |
 | [`xserver-inquiry.md`](xserver-inquiry.md) | ホスト(Xserver)への**問い合わせ文案**と、回答ごとの次の動き | 送るのはサイト所有者。回答の原文は公開リポジトリに載せず、design-log には日付と要旨だけ |
 | [`multisite-trial.md`](multisite-trial.md) | 旧ホストでの Multisite 化の検証(T.47)の**手順・結果・戻し方** | 変更の前に手順と戻し方を書き、実施後に結果を足す |
