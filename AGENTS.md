@@ -14,7 +14,7 @@
 
 ## いまの状態(2026-10-24 時点。最新は design-log が正)
 
-- **本番はさくらのレンタルサーバ**(`~/www/doujin-profile/`)。**サブドメイン型の Multisite** で、ネットワークは `https://dp.no32.tk/`、各サイトは `https://<名前>.dp.no32.tk/`(spec v0.6)。中身はメインサイトの初期データだけ。ユーザは `takano32` と `ftsf`(どちらも特権管理者)。
+- **本番はさくらのレンタルサーバ**(`~/www/doujin-profile/`)。**サブドメイン型の Multisite** で、ネットワークは `https://dp.no32.tk/`、各サイトは `https://<名前>.dp.no32.tk/`(spec v0.6)。サイトはメインサイトと `ftsf.dp.no32.tk`(管理者 `ftsf`。中身は初期データだけ)。ユーザは `takano32` と `ftsf`(どちらも特権管理者)。
 - **前段に Caddy**(GCP の e2-micro、米国)。サイトごとの証明書(on-demand TLS + ask)と、さくらへの中継。本当のホスト名と訪問者の IP は合言葉付きのヘッダで渡し、`wp-config.php` の数行で受け取る。手順と戻し方は `docs/caddy-front-trial.md`。
 - ログインまで確認済み。さくらの国外 IP フィルタは、サイト所有者が e2-micro の IP を許可して通した(T.25)。**e2-micro の IP が変わったら、さくら側の許可も直す必要がある。**
 - 旧ホスト `profile.xwp.jp`(Xserver。サブディレクトリ型の Multisite)は 2026-09-18 の状態のまま(spec T.26)。
