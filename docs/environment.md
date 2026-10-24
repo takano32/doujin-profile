@@ -94,6 +94,30 @@ PHP の値(CLI で確認。Web 側の値は未確認): `upload_max_filesize` 5M�
 
 ---
 
+## C. 前段の Caddy(e2-micro)
+
+2026-10-24 に ssh と curl で確かめた事実(読み取りだけ)。`*.true-dp.no32.tk` へ移る案(検討中)の前段になる。
+
+| 項目 | 実測 |
+|---|---|
+| 接続 | `ssh takano32@35.212.198.233`(鍵認証、`sudo` はパスワードなしで通る) |
+| マシン | GCP の e2-micro(`us-west1-a`、米国オレゴン)。2 vCPU(共有)・メモリ 952MB・ディスク 28GB(使用 66%)。Ubuntu 26.04.1 |
+| Caddy | 2.6.2(Ubuntu のパッケージ。systemd の `caddy.service`、設定は `/etc/caddy/Caddyfile`)。80・443 を待ち受け |
+| 同居 | **別のサービスがこの Caddy の後ろにいる**(`e2-micro.no32.tk`)。Caddyfile を変えるときは、そのブロックを壊さない |
+| doujin-profile の設定 | `doujin-profile.no32.tk` のブロックがあり、`/` だけを `tsff.sakura.ne.jp` へ転送、それ以外は 404。ただし `doujin-profile.no32.tk` の DNS はさくらへの CNAME なので、実際の通信はこの Caddy を通っていない |
+| `true-dp.no32.tk` | DNS はワイルドカードでこの IP を向いている(`*.true-dp.no32.tk` も)。Caddyfile にブロックが無いので、HTTPS は TLS の `internal error`、HTTP は Caddy が https へ 308 |
+
+### さくら側が Host ヘッダをどう扱うか(`curl -H "Host: …" http://tsff.sakura.ne.jp/`)
+
+| 送った Host | 結果 |
+|---|---|
+| `doujin-profile.no32.tk` | 302 → `https://doujin-profile.no32.tk/`(さくら側で https へ転送。`X-Forwarded-Proto: https` を付けても同じ) |
+| `ftsf.true-dp.no32.tk` / `true-dp.no32.tk` | 403(さくらの既定のページ)。**登録していないホスト名は受け付けない** |
+
+→ Caddy からさくらへは、**登録済みのホスト名(`doujin-profile.no32.tk`)で、https で**つなぐ必要がある。WordPress に本当のサブドメインを伝えるには、別のヘッダ(`X-Forwarded-Host` など)で渡して `wp-config.php` で受け取る。さくらの nginx がそのヘッダを PHP まで通すかは未確認。
+
+---
+
 ## 0. 計測の基準
 
 | 項目 | 値 |
