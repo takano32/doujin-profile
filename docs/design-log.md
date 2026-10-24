@@ -1471,3 +1471,10 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 
 手順(実行前に記す): `wp-config.php` を `~/dumps/pre-doujin-profile-smtp-20261025/` に退避(600)→ 「編集が必要なのはここまでです」の前に WP Mail SMTP の定数(`WPMS_ON`・`WPMS_MAILER=smtp`・`WPMS_SMTP_HOST=www1191.sakura.ne.jp`・`WPMS_SMTP_PORT=587`・`WPMS_SSL=tls`・`WPMS_SMTP_AUTH`・`WPMS_SMTP_USER=noreply@dp.no32.tk`・`WPMS_MAIL_FROM=noreply@dp.no32.tk`・`WPMS_MAIL_FROM_FORCE`・`WPMS_SET_RETURN_PATH`)を足す。パスワード `WPMS_SMTP_PASS` はサイト所有者が SSH で 1 行足す(Claude は値を見ない)→ WP Mail SMTP をネットワーク有効化 → `+dptest` に試験メール。
 戻し方: プラグインをネットワーク無効化し、退避した `wp-config.php` に戻す。
+
+### 障害: SPF の TXT で dp.no32.tk が引けなくなった(Claude の案内の誤り)
+
+- 2026-10-25 07:5x に気付いた: `dp.no32.tk` と `*.dp.no32.tk` の A が Value-Domain から返らない(`x.dp.no32.tk` は NXDOMAIN)。サイトが開けない。
+- 原因: `no32.tk` はワイルドカード `*.no32.tk`(35.212.198.233)で `dp.no32.tk` とその下を受けていた。`dp.no32.tk` に TXT を足したことで `dp.no32.tk` が実在の名前になり、ワイルドカードが効かなくなった(RFC 4592 の最も近い祖先の規則)。Claude が SPF を案内したとき、ワイルドカードとの関係を確かめなかった。
+- 直し(サイト所有者に依頼): Value-Domain に `a dp 35.212.198.233` と `a *.dp 35.212.198.233` を足す(TXT は残す)。
+- メール: SMTP 認証は初期ドメインの `noreply@tsff.sakura.ne.jp` で通る(`noreply@dp.no32.tk` では 535。`dp.no32.tk` はさくらに未登録とみられる)。`WPMS_SMTP_USER` を初期ドメインに変えた。差出人 `noreply@dp.no32.tk` は「Domain of sender address … does not exist」(553 5.1.8)で断られた(A も MX も引けないため)。WP Mail SMTP 4.10.3 はネットワーク有効化済み。
