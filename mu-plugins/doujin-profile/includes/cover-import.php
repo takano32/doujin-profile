@@ -567,8 +567,6 @@ function doujin_profile_import_image( $image_url, $post_id, $title ) {
  */
 function doujin_profile_sideload_image( $image_url, $post_id, $title ) {
 	require_once ABSPATH . 'wp-admin/includes/file.php';
-	require_once ABSPATH . 'wp-admin/includes/media.php';
-	require_once ABSPATH . 'wp-admin/includes/image.php';
 
 	$tmp = wp_tempnam( $image_url );
 	if ( ! $tmp ) {
@@ -595,7 +593,60 @@ function doujin_profile_sideload_image( $image_url, $post_id, $title ) {
 		return new WP_Error( 'doujin_profile_download_failed', $hint . ( $code ? " (HTTP {$code})" : '' ), array( 'status' => 502 ) );
 	}
 
-	$file_name = sanitize_file_name( wp_basename( (string) wp_parse_url( $image_url, PHP_URL_PATH ) ) );
+	$file_name = wp_basename( (string) wp_parse_url( $image_url, PHP_URL_PATH ) );
+
+	return doujin_profile_attach_file( $tmp, $file_name, $post_id, $title );
+}
+
+/**
+ * 手元のファイル (WP-CLI の import。spec §6.4) をメディアライブラリに保存する。
+ * 同じ道筋から取り込んだ添付がこの作品の下にあれば、それを返す (二重にしない)。
+ *
+ * @param string $path       ファイルの道筋 (読める絶対パス)。
+ * @param int    $post_id    添付の親にする作品。
+ * @param string $title      添付のタイトル・代替テキスト。
+ * @param string $source_key 出どころの印 (JSON に書かれた道筋。_doujin_profile_source_url に入れて照合に使う)。
+ * @param string $file_name  メディアでのファイル名 (空なら元の名前)。
+ * @return int|WP_Error 添付 ID。
+ */
+function doujin_profile_import_file( $path, $post_id, $title, $source_key, $file_name = '' ) {
+	$imported = doujin_profile_imported_attachments( $post_id );
+	if ( isset( $imported[ $source_key ] ) ) {
+		return $imported[ $source_key ];
+	}
+	if ( ! is_file( $path ) || ! is_readable( $path ) ) {
+		return new WP_Error( 'doujin_profile_file_missing', "ファイルが読めません: {$path}" );
+	}
+
+	require_once ABSPATH . 'wp-admin/includes/file.php';
+	$tmp = wp_tempnam( $path );
+	if ( ! $tmp || ! copy( $path, $tmp ) ) {
+		return new WP_Error( 'doujin_profile_download_failed', '一時ファイルを作れませんでした。' );
+	}
+
+	$attachment_id = doujin_profile_attach_file( $tmp, '' !== $file_name ? $file_name : wp_basename( $path ), $post_id, $title );
+	if ( ! is_wp_error( $attachment_id ) ) {
+		update_post_meta( $attachment_id, DOUJIN_PROFILE_SOURCE_URL_META, $source_key );
+	}
+
+	return $attachment_id;
+}
+
+/**
+ * 一時ファイルを添付にする (コア標準の media_handle_sideload())。失敗したら一時ファイルを消す。
+ *
+ * @param string $tmp       一時ファイル (成功すると uploads へ移される)。
+ * @param string $file_name メディアでのファイル名。
+ * @param int    $post_id   添付の親。
+ * @param string $title     添付のタイトル・代替テキスト。
+ * @return int|WP_Error 添付 ID。
+ */
+function doujin_profile_attach_file( $tmp, $file_name, $post_id, $title ) {
+	require_once ABSPATH . 'wp-admin/includes/file.php';
+	require_once ABSPATH . 'wp-admin/includes/media.php';
+	require_once ABSPATH . 'wp-admin/includes/image.php';
+
+	$file_name = sanitize_file_name( $file_name );
 	$file      = array(
 		'name'     => '' !== $file_name ? $file_name : 'image.jpg',
 		'tmp_name' => $tmp,
@@ -604,7 +655,7 @@ function doujin_profile_sideload_image( $image_url, $post_id, $title ) {
 	$attachment_id = media_handle_sideload( $file, $post_id, $title );
 	if ( is_wp_error( $attachment_id ) ) {
 		@unlink( $tmp ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
-		return new WP_Error( 'doujin_profile_sideload_failed', '取った画像をメディアに保存できませんでした: ' . $attachment_id->get_error_message(), array( 'status' => 500 ) );
+		return new WP_Error( 'doujin_profile_sideload_failed', '画像をメディアに保存できませんでした: ' . $attachment_id->get_error_message(), array( 'status' => 500 ) );
 	}
 
 	if ( '' !== $title ) {
