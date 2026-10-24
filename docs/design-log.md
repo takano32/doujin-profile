@@ -1403,3 +1403,5 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 - Fable が作った(子テーマは theme.json 中心で 210 行、PHP なし。head は 120 行。JSON-LD は作らない)。手元の Docker(WP 7.1.3 / PHP 8.3)で f_tsf のデータを入れて確かめた。`data/f_tsf.json` の `theme` を子テーマに直した(import でテーマが戻る罠)。
 - 手順(実行前に記す): 退避 `~/dumps/pre-doujin-profile-theme-20261025/` → `scripts/deploy.sh --go`(head)→ `scripts/deploy.sh --themes --go` → `wp theme enable doujin-profile-tt5 --network` → `wp theme activate doujin-profile-tt5 --url=https://ftsf.dp.no32.tk`(メインサイトは TT5 のまま)。
 - 戻し方: `wp theme activate twentytwentyfive --url=…` → `wp theme disable doujin-profile-tt5 --network` → テーマのディレクトリを消す。
+
+結果(2026-10-25): 退避のあと head と子テーマを配備し、`ftsf.dp.no32.tk` だけを `doujin-profile-tt5` に切り替えた(メインサイトは TT5)。トップに `description`・OGP・`rating=adult` が出る(og:image はサイトアイコン未設定のため無し。ftsf がマイページでアイコンを保存すれば出る)。作品ページはスマホ幅で書影が切れず、カード・グラデーションのボタン・フッタはサイト名と紹介文だけ。手元の Docker の試験環境は消した。
