@@ -64,10 +64,30 @@ ssh tsff@doujin-profile.no32.tk "sh -c 'cd ~/www/doujin-profile && wp core versi
 | テーマ | Twenty Twenty-Five 1.5 |
 | mu-plugins | 無い(堅牢化用の mu-plugin は未配備) |
 
-### S.5 未検証・気になる点
+### S.5 Multisite にできるか(2026-10-24、読み取りだけで確認)
+
+結論: **サブディレクトリ型なら、技術的な障害は見つからなかった。** 実際に変換して確かめるまでは「見込み」。
+
+| 前提 | 実測 | 判定 |
+|---|---|---|
+| サブディレクトリ型を選べるか | `allow_subdirectory_install()` = true(投稿はすべて 2026-10-24 作成で、1 か月より古い公開投稿が無い) | 可。**1 か月たつと選べなくなる**(コアの判定)。WP-CLI の `wp core multisite-convert` ならこの判定に関係なく変換できる |
+| `.htaccess` の書き換えが効くか | パーマリンク `/%postname%/` で `/sample-page/` が 200、存在しないパスは 404、`/wp-json/` も 200 | 可。前段は nginx(`server: nginx`)だが、`.htaccess` は効いている |
+| `wp-config.php` を書けるか | `is_writable` = true | 可(定数は WP-CLI か手で足す) |
+| HTTPS の判定 | ログイン画面のフォームの送信先が `https://…`(`is_ssl()` が真) | 可。ただし `siteurl` / `home` が `http://` なので、**変換の前に https へ直す**(ネットワークの URL は変換時の値で決まる) |
+| ディスク | quota 300GB、使用 1.5GB | 余裕あり |
+| メール(招待・パスワード再設定) | `/usr/sbin/sendmail` あり | 送れる見込み(未送信) |
+| サブドメイン型 | `*.doujin-profile.no32.tk` は NXDOMAIN。DNS は value-domain(`ns1/ns2.value-domain.com`)、`doujin-profile` はさくらのサーバへの CNAME | 今のままでは不可。ワイルドカードの DNS と、さくら側でサブドメインを受けられるかの確認が要る(spec はサブディレクトリ型なので必須ではない) |
+| 同居サイト | `~/www/tsket/` などは別のディレクトリ・別の WordPress | Multisite 化は `~/www/doujin-profile/` の `wp-config.php`・`.htaccess`・DB のテーブルだけを変えるので、影響は出ない見込み。DB も別(この DB のテーブルは接頭辞 `wp` の 12 個だけ。`tsket` の接頭辞は別の値) |
+
+テーブル接頭辞は `wp`(アンダースコア無し。表は `wpposts` など)。Multisite のサイト別の表は `wp2posts` のような名前になる。
+
+PHP の値(CLI で確認。Web 側の値は未確認): `upload_max_filesize` 5M、`post_max_size` 8M。マンガの画像を上げるには小さいかもしれない。
+
+### S.6 未検証・気になる点
 
 - 成人向けの扱い。2026-09-18 の調査([`hosting-research.md`](hosting-research.md) §5)では、さくらのレンタルサーバは機能比較表の「アダルトサイト」が全プランで ×。決めるのはさくらなので、使い方を決める前に再確認する。
-- Multisite に変換できるか、また同居サイトがある中で変換してよいか。
+- Multisite への変換は、実機ではまだ試していない(S.5 は読み取りでの見込み)。
+- Web 側の PHP の値(アップロードの上限など)。
 - `.user.ini` などの PHP の実行制限、PHP 拡張の一覧。
 
 ---
