@@ -1497,3 +1497,4 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 | 2026-10-25 | ユーザ了承 | 「管理画面から作ったサイトも「準備中」から始まるように直して、本番に置きますか？」に「直して置く」 |
 
 - `wp_initialize_site` の処理で `add_option( doujin_profile_preparing, true )`(invite が入れた値は上書きしない。既存サイトには効かない)。退避のあと配備し、一時サイトで試して消す。
+- 結果: 退避のあと配備。管理画面の「新規追加」と同じ `wpmu_create_blog(…, array('public' => 1))` で一時サイト `dptest3`(blog_id 6、管理者 takano32)を作ると、`doujin_profile_preparing` = 1・home は https。ftsf には値が無い(公開のまま)。一時サイトは消した。
