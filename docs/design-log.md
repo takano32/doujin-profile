@@ -1444,3 +1444,11 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 
 - `includes/mail.php`(`phpmailer_init` で裏の差出人を From にそろえる)を足して配備。送らずに確かめた(`phpmailer_init` の中で止めた): From・Sender とも `wordpress@dp.no32.tk`。
 - invite のエラー文から HTML を外した(`wp_strip_all_tags`)。
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-25 | ユーザ作業 | 「レコード入れたつもりだけど dig とかで引ける？」→ `dp.no32.tk` の TXT `v=spf1 a:www1191.sakura.ne.jp ~all` が Value-Domain と 8.8.8.8 で引けた |
+
+- **失敗と戻し**: 試験のメールを送ると `wp_mail` が false(「メール機能をインスタンス化できませんでした」)。原因は直前に足した `includes/mail.php`(裏の差出人を From にそろえる)。**さくらの sendmail は `-f` に自分のアカウント以外のアドレスを渡すと断る**(`php -r` で `-fwordpress@dp.no32.tk` は false、`-f tsff@www1191.sakura.ne.jp` と `-f` 無しは true)。WP-CLI では PHPMailer の同じインスタンスが使い回されるので、外したつもりの 2 回目も失敗に見えた。`mail.php` を消して配備し(サーバ上のファイルも消した)、送れることを確かめた。**mail.php を置いていた間(約 10 分)はメールが送れなかった**。その間に送ったメールは無い。
+- そのため裏の差出人はさくらの既定(`tsff@www1191.sakura.ne.jp`)のまま。`dp.no32.tk` の SPF は表の差出人の名前に対するもので、受け取る側が裏の差出人で SPF を見る限りは照合に使われない(害はない)。
+- `+dptest` 宛てに試験のメールを 1 通送った(true)。届き方はサイト所有者に確認中。招待の試験のメール(mail.php を置く前に送ったもの)も届いているはず。
