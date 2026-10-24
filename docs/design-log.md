@@ -1436,3 +1436,11 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 
 結果(2026-10-25): dry-run と誤りの例(既存名・禁止名・4 文字未満)は日本語で止まった。ただし**エラーの文にコアの HTML(`<strong>` やリンク)がそのまま出る**(直す)。サイト所有者のアドレスは takano32 のアカウントで使用済みだったので、`+dptest` 付きのアドレスにした。本番の invite で `https://dptest.dp.no32.tk/`(blog_id 5、成人向け、準備中)と持ち主 dptest(そのサイトの administrator、特権管理者ではない)ができ、Hello world が無く「ホーム」がトップ、訪問者には「準備中です」+ noindex(200)、証明書も取れた。dptest でログイン → マイページに直行 → 準備中の案内と「公開する」→ 押すと公開中、年齢確認が出る。持ち主が REST で準備中に戻そうとしても戻らない。`wp doujin publish dptest --unpublish` で準備中に戻った。片づけ: サイト 5 とユーザ dptest を消し、空のアップロードのディレクトリ(sites/2・sites/5)を消した。
 - メール: さくらは `/usr/sbin/sendmail`(mailwrapper)で送れる。送信元は `www1191.sakura.ne.jp`(219.94.129.231、逆引きも一致)。差出人はコアの既定 `wordpress@dp.no32.tk` だが、**`dp.no32.tk` に SPF が無い**(`no32.tk` の SPF は Google の分だけ)ので、迷惑メールに入りうる。届いたかはサイト所有者に確認中。
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-25 | ユーザ質問 | 「MTA いたっけ？」→ さくらの sendmail で送れる。SPF が無い件を説明 |
+| 2026-10-25 | ユーザ依頼 | 「DNS の RR 教えてよ」→ `dp.no32.tk. TXT "v=spf1 a:www1191.sakura.ne.jp ~all"` を案内(サイト所有者が入れる) |
+
+- `includes/mail.php`(`phpmailer_init` で裏の差出人を From にそろえる)を足して配備。送らずに確かめた(`phpmailer_init` の中で止めた): From・Sender とも `wordpress@dp.no32.tk`。
+- invite のエラー文から HTML を外した(`wp_strip_all_tags`)。
