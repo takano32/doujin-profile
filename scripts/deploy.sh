@@ -1,30 +1,30 @@
 #!/bin/sh
-# mu-plugins/ を本番 (さくらのレンタルサーバ doujin-profile.no32.tk) へ配備する。
-# ~/.ssh/config の設定は要らない (接続先を直接書いている。鍵は ssh-agent か既定の鍵)。
+# mu-plugins/ をターゲットの WordPress へ配備する。接続先は scripts/targets/<名前>.env。
 #
-#   scripts/deploy.sh        dry-run。転送されるファイルの一覧だけを表示する
-#   scripts/deploy.sh --go   実際に転送する
+#   scripts/deploy.sh                      dry-run。転送されるファイルの一覧だけを表示する
+#   scripts/deploy.sh --go                 実際に転送する
+#   DP_TARGET=xserver scripts/deploy.sh    ターゲットを指定する (既定は scripts/targets/default)
 #
 # 約束 (docs/environment.md §10):
-#   - --delete は使わない。宛先の 2 つ上に wp-config.php がある
-#   - 宛先は www/doujin-profile/ の中だけ。同じアカウントの www/tsket/ ほかには触れない
+#   - --delete は使わない。宛先の上に wp-config.php がある
+#   - 宛先は WordPress の wp-content/mu-plugins/ だけ。同じアカウントの別のサイトには触れない
 #   - 必ず dry-run の一覧を目で見てから --go する
 #   - サーバ上で直接編集しない。リポジトリの mu-plugins/ が正本
 set -eu
+. "$(dirname "$0")/lib.sh"
+cd "$DP_ROOT"
 
-cd "$(dirname "$0")/.."
-
-DEST='tsff@doujin-profile.no32.tk:www/doujin-profile/wp-content/mu-plugins/'
+DEST="$SSH_TARGET:$WP_PATH/wp-content/mu-plugins/"
 
 if [ "${1:-}" = "--go" ]; then
 	DRY=''
-	echo "== 配備します: mu-plugins/ -> $DEST"
+	echo "== 配備します [$DP_TARGET]: mu-plugins/ -> $DEST"
 else
 	DRY='--dry-run'
-	echo "== dry-run (実際に送るには --go): mu-plugins/ -> $DEST"
+	echo "== dry-run [$DP_TARGET] (実際に送るには --go): mu-plugins/ -> $DEST"
 fi
 
 # -a ではなく -rlt: 所有者・グループ・パーミッションはサーバ側の既定に任せる
-rsync -rltv $DRY \
+rsync -rltv $DRY -e "$DP_SSH" \
 	--exclude='.DS_Store' --exclude='node_modules/' --exclude='*.map' \
 	mu-plugins/ "$DEST"

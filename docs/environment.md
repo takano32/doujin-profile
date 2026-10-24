@@ -14,8 +14,9 @@ doujin-profile を入れる WordPress について、**実際に ssh / curl し�
 ### S.1 接続
 
 ```sh
-ssh tsff@doujin-profile.no32.tk        # ポート 22、鍵認証。~/.ssh/config の設定は要らない
-ssh tsff@doujin-profile.no32.tk "sh -c 'cd ~/www/doujin-profile && wp core version 2>&1'"
+scripts/wp.sh core version             # ターゲット sakura (scripts/targets/sakura.env)。既定
+scripts/remote.sh 'ls -la wp-content'  # 設置先で sh のコマンドを実行
+ssh tsff@doujin-profile.no32.tk        # 直接入るとき。ポート 22、鍵認証。~/.ssh/config の設定は要らない
 ```
 
 | 項目 | 実測値 |
@@ -56,7 +57,7 @@ ssh tsff@doujin-profile.no32.tk "sh -c 'cd ~/www/doujin-profile && wp core versi
 
 | 項目 | 実測 |
 |---|---|
-| バージョン | 7.0.2 |
+| バージョン | 7.0.2(同日の夕方には 7.1.3 になっていた。自動更新か手動かは未確認) |
 | 構成 | **単一サイト**(`wp site list` は「This is not a multisite installation」)。`wp-config.php` に Multisite の定数は無い |
 | `siteurl` / `home` | `http://doujin-profile.no32.tk`(https ではない。表示はサーバ側の転送で https になる) |
 | ユーザ | `takano32`(administrator)だけ |
@@ -67,6 +68,7 @@ ssh tsff@doujin-profile.no32.tk "sh -c 'cd ~/www/doujin-profile && wp core versi
 ### S.5 Multisite にできるか(2026-10-24、読み取りだけで確認)
 
 結論: **サブディレクトリ型なら、技術的な障害は見つからなかった。** 実際に変換して確かめるまでは「見込み」。
+同じ確認は `scripts/check-multisite.sh` でどのターゲットにもできる。
 
 | 前提 | 実測 | 判定 |
 |---|---|---|

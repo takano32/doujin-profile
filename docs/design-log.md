@@ -637,3 +637,23 @@ clone 先では引き継がれないので、公開しても問題ない範囲�
 4. 試しのサイトを 1 つ作って表示・ログイン・画像のアップロードを確かめ、試しのサイトを消す。
 
 戻すときは、退避した 3 つを元に戻す。
+
+---
+
+## 2026-10-24 接続先をターゲットとして抽象化した
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-24 | ユーザ裁定 | 「抽象化してどこでも使えるようにしてよ」— ホストごとの違いをスクリプトから追い出し、どのホストでも同じ手順で作業できるようにする |
+
+### やったこと
+
+- 接続先を `scripts/targets/<名前>.env` に分けた(`SSH_TARGET`・`SSH_PORT`・`WP_PATH`・`SITE_URL`)。いまは `sakura`(既定。`scripts/targets/default`)と `xserver`(旧ホスト)。
+- 共通部分は `scripts/lib.sh`。`~/.ssh/config` を使わず、リモートのコマンドは標準入力で `sh -s` に渡す(さくらのログインシェルが csh で、`2>&1` などが通らないため)。
+- `scripts/wp.sh`(WP-CLI)、`scripts/remote.sh`(任意のコマンド)を足し、`scripts/deploy.sh` をターゲット対応にした。
+- 先ほど手で行った Multisite の可否の確認を `scripts/check-multisite.sh` にした(読み取りだけ)。
+
+### 確かめたこと
+
+- `sakura` で 4 つとも動いた(`deploy.sh` は dry-run だけ)。WordPress は同日の夕方に 7.1.3 になっていた。
+- `xserver` は、このマシンの `known_hosts` に旧ホストが無く「Host key verification failed」で止まった。ホスト鍵は勝手に受け入れず、そのままにしてある。
