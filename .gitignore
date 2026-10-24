@@ -1,0 +1,2 @@
+# 依存パッケージ (手元で npm install。build/ はコミットする)
+node_modules/

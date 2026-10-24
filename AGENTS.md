@@ -19,7 +19,7 @@
 - ログインまで確認済み。さくらの国外 IP フィルタは、サイト所有者が e2-micro の IP を許可して通した(T.25)。**e2-micro の IP が変わったら、さくら側の許可も直す必要がある。**
 - 旧ホスト `profile.xwp.jp`(Xserver。サブディレクトリ型の Multisite)は 2026-09-18 の状態のまま(spec T.26)。
 - 守りは wordpress.org の配布物のプラグインで: Limit Login Attempts Reloaded(ログイン。2 段階認証は求めない)、Disable Comments(コメント・ピンバック)、Disable XML-RPC。どれもネットワーク有効。
-- コードは `scripts/` と、元の巨大画像を消す `mu-plugins/doujin-profile-discard-original-image.php`(さくらに配備済み)だけ。本体は未着手。
+- コードは `scripts/`、元の巨大画像を消す `mu-plugins/doujin-profile-discard-original-image.php`(さくらに配備済み)、本体 `mu-plugins/doujin-profile/`(骨組みとデータ層。未配備)。JS は `mu-plugins/doujin-profile/` で `npm install` → `npm run build`(node 24.15 以上)、`build/` もコミットする。
 - ホストの規約は当面の判断材料にしない(当面は公開しない)。
 - 未決: 本番の前段の置き場所(T.24)、元の大きい画像の置き場所(T.51)、かんたん編集画面の中身(T.36)。**裁定は 1 件ずつ選択式で聞く**(ユーザ指示 2026-10-24)。
 

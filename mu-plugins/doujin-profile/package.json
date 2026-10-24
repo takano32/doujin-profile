@@ -1,0 +1,17 @@
+{
+  "name": "doujin-profile",
+  "version": "0.1.0",
+  "description": "doujin-profile 本体 mu-plugin のビルド (独自ブロックとマイページ)。src/ → build/。build/ はリポジトリに入れ、サーバに node は要らない",
+  "private": true,
+  "license": "GPL-2.0-or-later",
+  "scripts": {
+    "build": "wp-scripts build",
+    "start": "wp-scripts start"
+  },
+  "engines": {
+    "node": ">=24.15.0"
+  },
+  "devDependencies": {
+    "@wordpress/scripts": "37.0.0"
+  }
+}

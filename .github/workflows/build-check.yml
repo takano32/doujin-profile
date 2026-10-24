@@ -1,0 +1,28 @@
+# コミットした build/ がソース (src/) と一致するかの検査だけ (spec §12)。
+# ビルドし忘れを見つける。配備はしない (鍵を GitHub に置かない)。秘密情報は使わない。
+name: build-check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mu-plugins/doujin-profile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: mu-plugins/doujin-profile/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - name: build/ がコミットと一致するか
+        run: |
+          git status --porcelain -- build
+          git add -N build
+          git diff --exit-code -- build
