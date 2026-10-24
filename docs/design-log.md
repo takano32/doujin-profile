@@ -1405,3 +1405,12 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 - 戻し方: `wp theme activate twentytwentyfive --url=…` → `wp theme disable doujin-profile-tt5 --network` → テーマのディレクトリを消す。
 
 結果(2026-10-25): 退避のあと head と子テーマを配備し、`ftsf.dp.no32.tk` だけを `doujin-profile-tt5` に切り替えた(メインサイトは TT5)。トップに `description`・OGP・`rating=adult` が出る(og:image はサイトアイコン未設定のため無し。ftsf がマイページでアイコンを保存すれば出る)。作品ページはスマホ幅で書影が切れず、カード・グラデーションのボタン・フッタはサイト名と紹介文だけ。手元の Docker の試験環境は消した。
+
+## 2026-10-25 ネットワーク設定(T.32.1。容量はユーザ裁定)
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-25 | ユーザ裁定 | 「1 サイトに上げられる画像の容量は、どれくらいにしますか？」に「1GB」 |
+
+前の値(戻し方): `upload_space_check_disabled` 1、`blog_upload_space` 100、`upload_filetypes` はコアの既定の長い一覧(jpg … pages)、`illegal_names` ["www","web","root","admin","main","invite","administrator","files"]。`wp network meta update 1 <キー> <前の値>` で戻す。
+変更: `upload_space_check_disabled` 0、`blog_upload_space` 1024、`upload_filetypes` を画像だけ「jpg jpeg jpe png gif webp avif heic heif」、`illegal_names` に dp・api・mail・ftp・cdn・static・assets・img・blog・help・support・test・staging・dev・doujin-profile を足す。ftsf の使用量は 44MB。`NOBLOGREDIRECT`(`wp-config.php` の定数)は今回は入れない。
