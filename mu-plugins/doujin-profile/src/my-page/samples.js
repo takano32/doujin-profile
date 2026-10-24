@@ -1,14 +1,14 @@
 /**
  * サンプル画像 (メタ doujin_sample_ids。配列の順 = 表示の並び)。
  *
- * まとめてドロップ / ファイルを選ぶ (スマホは複数選択) / メディアから選ぶ。初期の並びはファイル名の自然順。
+ * まとめてドロップ / ファイルを選ぶ (複数選択) / メディアから選ぶ / 作品番号から取り込む (import.js)。初期の並びはファイル名の自然順。
  * ドラッグで並べ替え (SortableJS)、← → ボタンも。1 枚ずつ外す (画像はメディアに残る)。
  * 上げた画像の親は作品 (アップロード時に post を付ける。モーダルで上げた分はあとから付ける)。
  */
 
-import { useState } from '@wordpress/element';
+import { useRef, useState } from '@wordpress/element';
 import { MediaUpload } from '@wordpress/media-utils';
-import { BaseControl, Button, DropZone, FormFileUpload, Spinner } from '@wordpress/components';
+import { BaseControl, Button, DropZone, Spinner } from '@wordpress/components';
 
 import { data, move, StatusNotice, useNotice } from './util';
 import { adoptAttachment, sortByFileName, thumbnailUrl, uploadImages, useAttachments } from './media';
@@ -28,6 +28,7 @@ export function SamplesField( { workId, ids, onChange, disabled } ) {
 	const [ busy, setBusy ] = useState( false );
 	const [ notice, setNotice, clearNotice ] = useNotice();
 	const ref = useSortable( ( from, to ) => onChange( move( list, from, to ) ), { filter: 'button' } );
+	const fileInput = useRef( null ); // 「ファイルを選んで追加」。複数選択を確かに付けるため、自前の <input type="file" multiple>。
 	const locked = disabled || busy;
 
 	// 重複を除いて末尾に足す。上限を超える分は捨てて知らせる。
@@ -117,20 +118,26 @@ export function SamplesField( { workId, ids, onChange, disabled } ) {
 				) }
 				{ ! list.length && ! busy && <p className="description">サンプル画像はまだありません。</p> }
 				<div className="doujin-profile-actions">
-					<FormFileUpload
-						accept="image/*"
-						multiple
+					<Button
 						variant="secondary"
 						__next40pxDefaultSize
 						disabled={ locked || list.length >= max }
+						onClick={ () => fileInput.current && fileInput.current.click() }
+					>
+						ファイルを選んで追加
+					</Button>
+					<input
+						ref={ fileInput }
+						type="file"
+						accept="image/*"
+						multiple
+						hidden
 						onChange={ ( event ) => {
 							const files = Array.from( event.target.files || [] );
 							event.target.value = '';
 							upload( files );
 						} }
-					>
-						ファイルを選んで追加
-					</FormFileUpload>
+					/>
 					<MediaUpload
 						allowedTypes={ [ 'image' ] }
 						multiple
