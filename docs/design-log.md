@@ -1321,3 +1321,12 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 
 - Fable が実装(PHP 1 本 + JS 約 1,450 行。`build/my-page.js` 61KB、SortableJS 込み)。Claude が取り込みの口(権限・作品番号の検査・取りに行く先の固定)を読んで確認し、commit。本番には置いていない。
 - Fable の判断: 「作品を追加」でその場で下書きを作る(画像の親と取り込みに投稿 ID が要る。空のまま戻ると空の下書きが残る)。取り込みはサーバがメディア保存とアイキャッチまで、リンク・題名・発売日時は画面が未保存の編集として受け、持ち主の「保存」で標準 REST から書く。発売日時はスマホで扱いやすいネイティブの `datetime-local`。スマホ向けに「ファイルを選ぶ」も付けた。アイコンは切り抜きなし。一覧と作家の候補は 100 件まで。
+
+### 本番への配備と試験(ユーザ了承)
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-24 | ユーザ了承 | 「マイページを本番(さくら)に置いて試しますか？」に「いま置いて試す」 |
+
+手順(実行前に記す): `~/dumps/pre-doujin-profile-core-20261024/` に `wp db export` → `scripts/deploy.sh`(dry-run)→ `--go` → `wp rewrite flush --url=https://ftsf.dp.no32.tk`。`ftsf.dp.no32.tk` に一時ユーザ(そのサイトの administrator、特権管理者ではない)を作り、ヘッドレスの Chrome でログイン → マイページ直行、プロフィール・リンク集・作品の追加・書影の取り込み(FANZA・DLsite)・サンプルの投入と並べ替え・公開と予告を確かめる。試験の作品・画像・設定・一時ユーザは消す。
+戻し方: `scripts/remote.sh 'rm -r wp-content/mu-plugins/doujin-profile wp-content/mu-plugins/doujin-profile.php'`(データは投稿メタ・設定・分類として DB に残るが、本体が無ければ使われない)。それでも戻らなければダンプを `wp db import`。
