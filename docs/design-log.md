@@ -1256,3 +1256,11 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 
 手順(実行前に記す): `~/dumps/pre-doujin-profile-discard-original-20261024/` に `wp db export` → `scripts/deploy.sh --go` → `ftsf.dp.no32.tk` に一時ユーザ(administrator)を足し、手元で作った 4000x5600 の jpg を REST と `wp media import` で上げて、元が消えて `-scaled` と縮小版だけが残ること、`original_image` が無いこと、再生成・2560px 以下・削除後に孤児ファイルが無いことを確かめる。試験の添付と一時ユーザは消す。
 戻し方: `scripts/remote.sh 'rm wp-content/mu-plugins/doujin-profile-discard-original-image.php'`(設定も DB も持たない)。
+
+結果(2026-10-24): 退避 `~/dumps/pre-doujin-profile-discard-original-20261024/` のあと `scripts/deploy.sh --go`(`wp-content/mu-plugins/` を新規作成)。`ftsf.dp.no32.tk` に一時ユーザで:
+- REST(Caddy 経由)で 4000x5600 の jpg(12MB、約 9 秒)→ `hogehoge001-scaled.jpg`(1829x2560)と縮小版 6 種だけ。元のファイルは無く(URL も 404)、`original_image` も無い。
+- 3000x4200 の PNG → `big001-scaled.png` と縮小版だけ。1200x1600 の jpg → 何も消えない。
+- `wp media import`(WP-CLI)→ 同じく元が消えた。
+- ブロックエディタ(ヘッドレスの Chrome 156。`crossOriginIsolated`、ブラウザ側の縮小が有効)で 22MB の jpg → `media` の POST、`sideload` 7 回、`finalize` の流れで、同じく `-scaled` と縮小版 6 種だけが残った。由来確認用の `_wp_sideloaded_file` が 1 行残る(Fable の見立てどおり。無害)。
+- `wp media regenerate` → `-scaled-scaled` はできず、`original_image` も戻らない。REST の回転 → `-scaled-edited.jpg`(2560x1829)の新しい添付ができた。
+- 片づけ: 試験の添付・下書き・一時ユーザを消した。ユーザは `takano32` と `ftsf` だけ。
