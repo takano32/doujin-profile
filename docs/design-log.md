@@ -1330,3 +1330,15 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 
 手順(実行前に記す): `~/dumps/pre-doujin-profile-core-20261024/` に `wp db export` → `scripts/deploy.sh`(dry-run)→ `--go` → `wp rewrite flush --url=https://ftsf.dp.no32.tk`。`ftsf.dp.no32.tk` に一時ユーザ(そのサイトの administrator、特権管理者ではない)を作り、ヘッドレスの Chrome でログイン → マイページ直行、プロフィール・リンク集・作品の追加・書影の取り込み(FANZA・DLsite)・サンプルの投入と並べ替え・公開と予告を確かめる。試験の作品・画像・設定・一時ユーザは消す。
 戻し方: `scripts/remote.sh 'rm -r wp-content/mu-plugins/doujin-profile wp-content/mu-plugins/doujin-profile.php'`(データは投稿メタ・設定・分類として DB に残るが、本体が無ければ使われない)。それでも戻らなければダンプを `wp db import`。
+
+結果(2026-10-24): 退避のあと配備、`ftsf.dp.no32.tk` で `wp rewrite flush`。一時ユーザ(そのサイトの administrator)でヘッドレスの Chrome から:
+- ログイン → マイページに直行した。プロフィール(リード文)の保存 → `blogdescription` に入った。
+- 「作品を追加」→ 下書きができて編集が開いた。DLsite `RJ01634826` の取り込み → 書影・題名・発売日時・販売先リンクが入った。FANZA `d_737824` → 書影が替わり、販売先リンクが 2 件になった。
+- サンプル 1 枚を「ファイルを選んで追加」→ `doujin_sample_ids` に入った。発売日時を未来にして公開・保存 → `publish`、公開日時は今、一覧に「予告」の印と書影。
+- 見つけた不具合: (1)「ファイルを選んで追加」が 1 枚しか選べない(`multiple` が付いていない)、(2) 形の違う作品番号で「無効なパラメータ: product_id」と出る(日本語の案内にしたい)、(3) 見出し「マイページ」が 2 つ出る、(4) 書影を取り込み直すと前の書影がメディアに残る、(5) FANZA の書影の添付にタイトルが無い。
+- 片づけ: 試験の作品・添付・一時ユーザを消し、リード文を空に戻した。ユーザは `takano32` と `ftsf` だけ。
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-24 | ユーザ要望 | 「サンプル画像も書影と同じ取り込み機能載らんか」→ さくらから確認: DLsite は `api/=/product.json?workno=<番号>` の `image_samples`(この作品は 10 枚)、FANZA は `<cid>jp-001.jpg` からの連番(無い番号は 302) |
+| 2026-10-24 | ユーザ質問 | 「こんなに作り込みいるけど最初の提案、標準編集の改造だったんだよね、なんで？」 |
