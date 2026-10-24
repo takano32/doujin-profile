@@ -1,0 +1,149 @@
+{
+	"$schema": "https://schemas.wp.org/wp/6.7/theme.json",
+	"version": 3,
+	"settings": {
+		"color": {
+			"palette": [
+				{ "color": "#FFFFFF", "name": "白", "slug": "base" },
+				{ "color": "#25182F", "name": "文字", "slug": "contrast" },
+				{ "color": "#FF6AA2", "name": "ピンク", "slug": "accent-1" },
+				{ "color": "#7A3CFF", "name": "紫", "slug": "accent-2" },
+				{ "color": "#5C25D8", "name": "濃い紫", "slug": "accent-3" },
+				{ "color": "#6F617A", "name": "薄い文字", "slug": "accent-4" },
+				{ "color": "#F7F2FF", "name": "淡い紫", "slug": "accent-5" },
+				{ "color": "#7A3CFF24", "name": "線", "slug": "accent-6" }
+			],
+			"gradients": [
+				{
+					"gradient": "linear-gradient(135deg, #7A3CFF 0%, #A54CFF 55%, #FF6AA2 100%)",
+					"name": "紫からピンク",
+					"slug": "violet-pink"
+				},
+				{
+					"gradient": "radial-gradient(circle at 12% 10%, rgba(255, 106, 162, 0.16), transparent 26%), radial-gradient(circle at 88% 8%, rgba(122, 60, 255, 0.15), transparent 32%), linear-gradient(180deg, #FFFFFF 0%, #F7F2FF 44%, #FFFFFF 100%)",
+					"name": "淡い背景",
+					"slug": "haze"
+				}
+			]
+		},
+		"shadow": {
+			"presets": [
+				{ "name": "カード", "shadow": "0 12px 34px rgba(74, 40, 120, 0.10)", "slug": "card" }
+			]
+		}
+	},
+	"styles": {
+		"color": {
+			"gradient": "var:preset|gradient|haze"
+		},
+		"typography": {
+			"fontSize": "var:preset|font-size|medium",
+			"fontWeight": "400",
+			"lineHeight": "1.65"
+		},
+		"elements": {
+			"button": {
+				"border": {
+					"color": "transparent",
+					"radius": "0.8rem"
+				},
+				"color": {
+					"background": "var:preset|color|accent-2",
+					"gradient": "var:preset|gradient|violet-pink",
+					"text": "var:preset|color|base"
+				},
+				"spacing": {
+					"padding": {
+						"bottom": "0.7rem",
+						"left": "1.5rem",
+						"right": "1.5rem",
+						"top": "0.7rem"
+					}
+				},
+				"typography": {
+					"fontWeight": "700"
+				},
+				":hover": {
+					"color": {
+						"background": "var:preset|color|accent-3",
+						"gradient": "linear-gradient(135deg, #5C25D8 0%, #8F3FE6 55%, #E85A90 100%)",
+						"text": "var:preset|color|base"
+					}
+				}
+			},
+			"heading": {
+				"typography": {
+					"fontWeight": "700"
+				}
+			},
+			"link": {
+				"color": {
+					"text": "var:preset|color|accent-3"
+				}
+			}
+		},
+		"blocks": {
+			"core/button": {
+				"variations": {
+					"outline": {
+						"border": {
+							"color": "var:preset|color|accent-2",
+							"width": "1px"
+						},
+						"color": {
+							"text": "var:preset|color|accent-3"
+						},
+						"css": ".wp-block-button__link:not(.has-background):hover { background: color-mix(in srgb, var(--wp--preset--color--accent-2) 10%, transparent); color: var(--wp--preset--color--accent-3); }",
+						"spacing": {
+							"padding": {
+								"bottom": "calc(0.7rem - 1px)",
+								"left": "calc(1.5rem - 1px)",
+								"right": "calc(1.5rem - 1px)",
+								"top": "calc(0.7rem - 1px)"
+							}
+						}
+					}
+				}
+			},
+			"core/post-featured-image": {
+				"border": {
+					"radius": "1rem"
+				}
+			},
+			"core/site-logo": {
+				"css": "& img { border-radius: 0.6rem; }"
+			},
+			"core/site-tagline": {
+				"color": {
+					"text": "var:preset|color|accent-4"
+				}
+			},
+			"core/site-title": {
+				"typography": {
+					"fontWeight": "800"
+				}
+			},
+			"doujin-profile/work-card": {
+				"border": {
+					"color": "var:preset|color|accent-6",
+					"radius": "1.4rem",
+					"style": "solid",
+					"width": "1px"
+				},
+				"color": {
+					"background": "var:preset|color|base"
+				},
+				"shadow": "var:preset|shadow|card",
+				"spacing": {
+					"padding": {
+						"bottom": "1rem",
+						"left": "1rem",
+						"right": "1rem",
+						"top": "1rem"
+					}
+				},
+				"css": "& .doujin-profile-work-card__cover img { border-radius: 1rem; }"
+			}
+		}
+	}
+}
