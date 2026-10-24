@@ -1484,3 +1484,7 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 | 2026-10-25 | ユーザ作業 | 「入れたわ」→ `dp.no32.tk`・`*.dp.no32.tk` の A(35.212.198.233)が Value-Domain と 8.8.8.8 で引け、`https://dp.no32.tk/`・`https://ftsf.dp.no32.tk/` とも 200 に戻った。TXT(SPF)も残っている |
 
 - 復旧のあと、WP Mail SMTP(ユーザ `noreply@tsff.sakura.ne.jp`、差出人と Return-Path `noreply@dp.no32.tk`)で `+dptest` に試験メールを送った: `wp_mail` が true(さくらの SMTP が受け付けた)。届いたかはサイト所有者に確認中。注意: `dp.no32.tk` に MX が無いので、もし Gmail に断られてもエラーメールはどこにも戻らない。
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-25 | ユーザ確認 | 「あ、メールきたよ」→ SMTP 経由の試験メールが Gmail に届いた。招待メール(T.32.9.1)もこの経路で送られる |
