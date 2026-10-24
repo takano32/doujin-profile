@@ -42,6 +42,8 @@ function doujin_profile_on_initialize_site( $new_site, $args ) {
 		switch_to_blog( $new_site->id );
 	}
 	doujin_profile_init_site( isset( $args['user_id'] ) ? (int) $args['user_id'] : 0 );
+	// 新しいサイトは作り方 (invite / ネットワーク管理画面) に関わらず準備中から始める (T.11)。invite が入れた値は上書きしない。
+	add_option( DOUJIN_PROFILE_PREPARING_OPTION, true );
 	if ( $switched ) {
 		restore_current_blog();
 	}
