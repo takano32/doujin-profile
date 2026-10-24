@@ -576,3 +576,32 @@ clone 先では引き継がれないので、公開しても問題ない範囲�
 本番への接続(`ssh profile`)は、clone 先のマシンで `~/.ssh/config` と鍵を用意する必要がある。
 
 - 同日、サイト所有者の提案で本体を `AGENTS.md` に改名した(Claude Code 以外のエージェントでも読める共通の置き場)。`CLAUDE.md` は `@AGENTS.md` の 1 行だけにして、Claude Code からも同じ内容が読まれるようにしてある。
+
+---
+
+## 2026-10-24 デプロイ先がさくらのレンタルサーバに変わった
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-24 | ユーザ申告 | 「デプロイ先変わったわ」— 移転先は**さくら**。接続先は `tsff@doujin-profile.no32.tk`、設置先は `www/doujin-profile` |
+| 2026-10-24 | ユーザ裁定 | 「設定なしで作業できるように記録しておこう」— `~/.ssh/config` の別名(`Host profile`)に頼らず、接続先を直接書いて記録する |
+
+### 確かめたこと(読み取りだけ。詳細は `environment.md` §S)
+
+- さくらのレンタルサーバ(FreeBSD 13.0、ログインシェルは csh)。鍵認証で入れた。PHP 8.3.36、WP-CLI 2.12.0、MySQL 8.0.40。node は無い。
+- `~/www/doujin-profile/` に WordPress 7.0.2 の**単一サイト**。管理者は `takano32` だけ。`siteurl` / `home` は `http://`(表示はサーバの転送で https になる)。mu-plugins はまだ無い。
+- 同じアカウントの `~/www/` には、既存の静的サイトと別の WordPress(`~/www/tsket/`)が同居している。
+
+### 反映
+
+- `scripts/deploy.sh` の宛先を `tsff@doujin-profile.no32.tk:www/doujin-profile/wp-content/mu-plugins/` にした。`~/.ssh/config` は要らない。dry-run だけ実行し、`--go` はまだしていない。
+- `AGENTS.md` の「いまの状態」と「本番を扱うとき」を移転先に合わせた。旧ホストの入り方は末尾に残した。
+- `environment.md` の冒頭に移転先の実測(§S)を足した。§0 以降は旧ホストの記録として残す。
+
+### 未決(裁定を仰ぐ)
+
+1. 👤 **成人向けの扱い**: 2026-09-18 の調査では、さくらのレンタルサーバは「アダルトサイト ×」だった(`hosting-research.md` §5)。成人向けの素材を載せない方針(spec D1 の選択肢 b)にするのか、さくらに確認するのか。
+2. 👤 **新しいホストを Multisite にするか**(同居サイトがあるので、旧ホストのときより慎重に。手順と戻し方を先に文書にする)。
+3. `siteurl` / `home` を `https://` に直す(了承を得てから)。
+4. 堅牢化用の mu-plugin の配備(`scripts/deploy.sh --go`。了承を得てから)。
+5. spec §3(前提と制約)を移転先に合わせて書き直す。旧ホストを解約するかどうか。

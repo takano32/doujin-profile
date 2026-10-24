@@ -4,6 +4,74 @@ doujin-profile を入れる WordPress について、**実際に ssh / curl し�
 仕様そのものは [`spec.md`](spec.md) が正。先行プロジェクト ts-novels の `docs/environment.md` と同じ位置づけで、
 同じホストの別アカウントなので内容もよく似ている(差分は §8)。
 
+> **2026-10-24 にデプロイ先がさくらのレンタルサーバに変わった。** 移転先の実測は直下の「§S」にまとめた。
+> §0 以降は**旧ホスト `profile.xwp.jp`(Xserver for WordPress)の 2026-09-18 時点の実測**で、移転先に合わせて書き直すまでは参考として残す。
+
+## S. 移転先: さくらのレンタルサーバ(doujin-profile.no32.tk)
+
+2026-10-24 に ssh と curl で確かめた事実。すべて読み取りだけで、何も変えていない。
+
+### S.1 接続
+
+```sh
+ssh tsff@doujin-profile.no32.tk        # ポート 22、鍵認証。~/.ssh/config の設定は要らない
+ssh tsff@doujin-profile.no32.tk "sh -c 'cd ~/www/doujin-profile && wp core version 2>&1'"
+```
+
+| 項目 | 実測値 |
+|---|---|
+| 接続先 | `tsff@doujin-profile.no32.tk`、ポート 22。鍵は ssh-agent の ED25519 で通った |
+| サーバ | さくらのレンタルサーバ(`www1191.sakura.ne.jp`)。FreeBSD 13.0-RELEASE-p15 |
+| ホーム / シェル | `/home/tsff` / **`/bin/csh`**。`2>&1` は csh では「Ambiguous output redirect」になるので、`sh -c '…'` で包む |
+| 公開 URL | **`https://doujin-profile.no32.tk/`**。証明書は Let's Encrypt(2026-10-24 〜 2027-01-22)。`http://` は `https://` へ 302 |
+
+### S.2 ディレクトリ構成
+
+```
+/home/tsff/
+├── www/                       ← 公開ルート。別のサイトも同居している
+│   ├── index.html ほか        (既存の静的サイト)
+│   ├── tsket/                 (別の WordPress。触れない)
+│   └── doujin-profile/        ★ WordPress の設置先。wp-config.php もこの中
+│       ├── .htaccess          (さくらの圧縮・キャッシュ設定 + WordPress 標準の書き換え)
+│       ├── wp-cli.local.yml   (apache_modules: mod_rewrite)
+│       └── wp-content/        (index.php languages plugins themes upgrade uploads。mu-plugins/ はまだ無い)
+└── (dumps/ はまだ無い)
+```
+
+- 配備先は `~/www/doujin-profile/wp-content/mu-plugins/`(`scripts/deploy.sh`)。dry-run では、このディレクトリを作って `profile-site-hardening.php` を送る、という一覧になった。
+- `~/www/doujin-profile/` の外には触れない。rsync の `--delete` は使わない(宛先の 2 つ上に `wp-config.php` がある)。
+
+### S.3 ツール
+
+| ツール | 実測 |
+|---|---|
+| PHP(CLI) | 8.3.36(`/home/rs/php/8.3/bin/php`) |
+| WP-CLI | 2.12.0(`/usr/local/bin/wp`) |
+| DB | MySQL 8.0.40 |
+| rsync / git | あり |
+| node | 無い |
+
+### S.4 WordPress の現状
+
+| 項目 | 実測 |
+|---|---|
+| バージョン | 7.0.2 |
+| 構成 | **単一サイト**(`wp site list` は「This is not a multisite installation」)。`wp-config.php` に Multisite の定数は無い |
+| `siteurl` / `home` | `http://doujin-profile.no32.tk`(https ではない。表示はサーバ側の転送で https になる) |
+| ユーザ | `takano32`(administrator)だけ |
+| 有効なプラグイン | `auto-login-for-sakura-rental-server` だけ(ほかに無効のものが 11 個) |
+| テーマ | Twenty Twenty-Five 1.5 |
+| mu-plugins | 無い(堅牢化用の mu-plugin は未配備) |
+
+### S.5 未検証・気になる点
+
+- 成人向けの扱い。2026-09-18 の調査([`hosting-research.md`](hosting-research.md) §5)では、さくらのレンタルサーバは機能比較表の「アダルトサイト」が全プランで ×。決めるのはさくらなので、使い方を決める前に再確認する。
+- Multisite に変換できるか、また同居サイトがある中で変換してよいか。
+- `.user.ini` などの PHP の実行制限、PHP 拡張の一覧。
+
+---
+
 ## 0. 計測の基準
 
 | 項目 | 値 |

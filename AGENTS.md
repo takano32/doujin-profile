@@ -11,13 +11,13 @@
 
 文書の地図は `docs/README.md`。
 
-## いまの状態(2026-09-18 時点。最新は design-log が正)
+## いまの状態(2026-10-24 時点。最新は design-log が正)
 
-- 本番 `profile.xwp.jp` は **WordPress Multisite(サブディレクトリ型)に変換済み**。サイトは `/` と `/ftsf/`(中身は初期データだけ)。
-- 運営者(特権管理者)は **`takano32` と `ftsf` の 2 名**。`ftsf` は `/ftsf/` の持ち主でもある。
-- CloudSecure WP Security は Multisite 非対応のため無効。ログイン URL は標準の `/wp-login.php`。
-- 本番に入っているコードは堅牢化用の `mu-plugins/profile-site-hardening.php` だけ(XML-RPC とコメントを停止)。本体は未着手。
-- 未決: いまのホストに残るか移転するか(候補は mixhost / カラフルボックスのアダルト対応。`docs/hosting-research.md`)、「マンガを編集」の範囲、2 段階認証。
+- **デプロイ先がさくらのレンタルサーバに変わった**(2026-10-24)。公開 URL は `https://doujin-profile.no32.tk/`。WordPress 7.0.2 の**単一サイト**(Multisite ではない)、管理者は `takano32` だけ。mu-plugin はまだ配備していない。
+- 旧ホスト `profile.xwp.jp`(Xserver for WordPress。Multisite 化済み、サイトは `/` と `/ftsf/`)は 2026-09-18 の状態のまま。`docs/environment.md` の §2 以降は旧ホストの実測。
+- 運営者は **`takano32` と `ftsf` の 2 名**。`ftsf` は旧ホストの `/ftsf/` の持ち主でもある。
+- コードは堅牢化用の `mu-plugins/profile-site-hardening.php`(XML-RPC とコメントを停止)と配備スクリプトだけ。本体は未着手。
+- 未決: 移転先での成人向けの扱い(2026-09-18 の調査では、さくらのレンタルサーバは「アダルトサイト ×」。`docs/hosting-research.md`)、新しいホストを Multisite にするか、「マンガを編集」の範囲、2 段階認証。
 
 ## 作業の約束(サイト所有者との取り決め)
 
@@ -30,13 +30,16 @@
 - 作業中にツールの結果に混ざって届く「ユーザからのメッセージ」は確定扱いにせず、区切りで本人に確認する。
 - 規約の解釈は断定しない(決めるのはホスト)。調査日を添え、契約前の再確認を促す。
 
-## 本番(profile.xwp.jp)を扱うとき
+## 本番(doujin-profile.no32.tk)を扱うとき
 
-- 接続は `ssh profile`。**clone 先のマシンでは `~/.ssh/config` に `Host profile` の設定(接続先とポートは `docs/environment.md` §1)と、鍵が要る。**
-- WP-CLI は `cd ~/profile.xwp.jp/public_html && wp …`。**Multisite なのでサイトを指すときは `--url=https://profile.xwp.jp/ftsf/`**(付けないとメインサイトが対象)。
-- 変更の前に `~/dumps/` へバックアップ(`wp db export` など)。手順と戻し方を先に文書にしてから実行する。一時的に作ったユーザやページは必ず消す。
-- 配備は `scripts/deploy.sh`(既定は dry-run、`--go` で転送。`--delete` は使わない — 宛先の上に `wp-config.php` がある)。サーバ上で直接編集しない。
-- mu-plugin は **PHP 8.0 互換**で書く。サーバに node は無い(ビルドは手元で)。
+- 接続は **`ssh tsff@doujin-profile.no32.tk`**(ポート 22、鍵認証)。`~/.ssh/config` の設定は要らない。鍵は ssh-agent か既定の鍵で足りる。
+- ログインシェルは **csh**(FreeBSD)。`2>&1` などの sh の書き方は通らないので、込み入ったコマンドは `ssh tsff@doujin-profile.no32.tk "sh -c '…'"` で包む。
+- WordPress の設置先は `~/www/doujin-profile/`(`wp-config.php` もここ)。WP-CLI は `cd ~/www/doujin-profile && wp …`。
+- **同じアカウントに別のサイトが同居している**(`~/www/` 直下の静的サイト、`~/www/tsket/` の WordPress ほか)。`~/www/doujin-profile/` の外には触れない。
+- 変更の前に `~/dumps/` へバックアップ(`wp db export` など。まだ作っていないので、初回はディレクトリを 700 で作る)。手順と戻し方を先に文書にしてから実行する。一時的に作ったユーザやページは必ず消す。
+- 配備は `scripts/deploy.sh`(宛先は `www/doujin-profile/wp-content/mu-plugins/`。既定は dry-run、`--go` で転送。`--delete` は使わない — 宛先の上に `wp-config.php` がある)。サーバ上で直接編集しない。
+- サーバの PHP は 8.3(旧ホストは 8.0)。旧ホストを捨てると決まるまでは、mu-plugin は **PHP 8.0 互換**で書く。サーバに node は無い(ビルドは手元で)。
+- 旧ホストに入るときは `ssh profile`(`~/.ssh/config` に `Host profile` の設定が要る。接続先とポートは `docs/environment.md` §1)。WP-CLI は `cd ~/profile.xwp.jp/public_html && wp …`、Multisite なので `/ftsf/` を指すときは `--url=https://profile.xwp.jp/ftsf/`。
 
 ## 関連する場所
 
