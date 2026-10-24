@@ -1379,3 +1379,7 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 
 手順(実行前に記す): 退避 `~/dumps/pre-doujin-profile-import-20261025/` → `scripts/deploy.sh --go` → `wp doujin init-site --url=https://ftsf.dp.no32.tk`(2 回目で何も増えないこと)→ 素材(`data/f_tsf.json` と f_tsf の `public/samples/`)を `~/dumps/doujin-profile-import-f_tsf/` に置く → `wp doujin import … --dry-run` → 本番 → もう一度 import して増えないこと → トップを確かめる。
 戻し方: 作品と添付を消す、または退避のダンプを `wp db import`。
+
+結果(2026-10-25): 退避 → 配備 → `init-site`(Hello world とサンプルページを消し、パーマリンクを `/%postname%/` に。2 回目は書き換え規則の作り直しだけ)→ 素材を `~/dumps/doujin-profile-import-f_tsf/` に(f_tsf の `public/samples/` 56 ファイル・19MB と JSON)→ dry-run → 本番(約 29 秒)。作品 3 件(`/d_771085/` ほか)、添付 57(書影 3 + サンプル 54)、サークル名「TSFのF」、リード文、リンク集(販売 3・お知らせ 4)、成人向けの印オン。もう一度入れると「更新 3」で添付は増えない。
+- トップ: サークル名・リード文 → 販売ページ → 作品 3 件(書影・発売日の表記・あらすじ・サンプル・シェア・販売先が縦、アフィリエイトの注記)→ お知らせ。ボタンの間隔は直っていた。
+- 気付いた点: (1) **年齢確認がまだ無いのに、成人向けの書影が誰でも見られ、検索エンジンにも載りうる**(`blog_public` = 1、robots は index 可)。(2) フッタに TT5 の初期のリンク(ブログ・イベント…)が残る(子テーマ T.32.6 で)。
