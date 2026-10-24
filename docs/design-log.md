@@ -1180,3 +1180,5 @@ Claude の整理(案。裁定待ち):
 4. Caddy 経由でトップと `/wp-admin/` が開くこと、`ftsf` が管理者であることを確かめる。
 
 戻し方: `wp site delete <blog_id> --yes`(サイトのテーブルとアップロードを消す。ユーザ `ftsf` は消えない)。それでも戻らなければ 1. のダンプを `wp db import`。
+
+結果: blog_id 4 で作成。`home`・`siteurl` を https にした。`ftsf` はそのサイトの administrator。Caddy 経由でトップ 200、`/wp-admin/` は `https://ftsf.dp.no32.tk/wp-login.php` へ 302、証明書は on-demand で発行された。
