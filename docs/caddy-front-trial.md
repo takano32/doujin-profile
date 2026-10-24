@@ -9,7 +9,7 @@
 | 前段 | e2-micro(`ssh takano32@35.212.198.233`、Caddy 2.6.2。`environment.md` §C) |
 | 裏側 | ターゲット `sakura`(`~/www/doujin-profile/`、WordPress 単一サイト・初期データだけ。`environment.md` §S) |
 | DNS | `dp.no32.tk` と `*.dp.no32.tk` は e2-micro を向いている(追加は要らない) |
-| 状態 | 段階 A・B・C と `ask` は実施済み(2026-10-24、結果は §4)。ログインだけ未確認(§4 段階 C)(各段階の前に、サイト所有者の了承を得る) |
+| 状態 | 段階 A・B・C と `ask` は実施済み(2026-10-24、結果は §4)。ログインも確認済み(§4)(各段階の前に、サイト所有者の了承を得る) |
 
 名前: サーバ上に置くファイル・環境変数・ヘッダには、なるべく `doujin-profile` を入れる(ユーザ指示 2026-10-24「あとで忘れるでしょ」)。
 
@@ -206,3 +206,23 @@ Caddyfile の退避は `/etc/caddy/Caddyfile.bak-20261024-0400`。足したも�
 | `dp.no32.tk` / 同居サービス | 変わらず |
 
 戻し方: `sudo cp -p /etc/caddy/Caddyfile.bak-20261024-0400 /etc/caddy/Caddyfile && sudo systemctl reload caddy`。
+
+### ログインの確認と、転送先の書き戻し(2026-10-24 13:14 JST)
+
+サイト所有者が、さくらの国外 IP アドレスフィルタで e2-micro の IP アドレスを許可した(フィルタ自体は有効のまま)。e2-micro から `wp-login.php` が 403 → 302 に変わった。
+
+| 確認 | 結果 |
+|---|---|
+| 一時ユーザ(購読者)で `https://dp.no32.tk/wp-login.php` に POST | 302 → `/wp-admin/profile.php`、そのページが 200 |
+| セッションの記録の IP(`wp user session list`) | **訪問者の本当の IP**(Caddy の IP ではない)。`X-Doujin-Profile-Client-IP` の受け取りが働いている |
+| `https://dp.no32.tk/wp-admin`(末尾スラッシュ無し) | 301 → `https://doujin-profile.no32.tk/wp-admin/` (**さくら側の名前に漏れていた**) |
+
+転送先の漏れは、さくらの Apache がディレクトリの末尾スラッシュの転送を自分の名前で作るため。Caddy の `reverse_proxy` に次の 1 行を足した(退避は `/etc/caddy/Caddyfile.bak-20261024-0414`):
+
+```caddyfile
+		header_down Location https://doujin-profile.no32.tk https://{host}
+```
+
+足したあと: `/wp-admin` → `https://dp.no32.tk/wp-admin/`、`/wp-content` → `https://dp.no32.tk/wp-content/`。一時ユーザは削除した(ユーザは `takano32` だけ)。
+
+注意: 前段を通る要求は、さくらからはすべて e2-micro の IP に見える。だから**前段経由では国外からのログインもフィルタを通る**。ログインの守りの本体は 2 段階認証(TASKS T.19)。
