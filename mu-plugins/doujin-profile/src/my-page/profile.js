@@ -1,6 +1,8 @@
 /**
  * プロフィール: サークル名 (blogname)・リード文 (blogdescription)・アイコン (site_icon。サイトロゴ site_logo にも同じ画像)。
  * どれもコアが REST の wp/v2/settings に載せている項目で、独自の設定は無い (spec §6.0)。
+ * 準備中のサイトには「公開する」(設定 doujin_profile_preparing を偽に。同じ wp/v2/settings。includes/preparing.php)。
+ * 準備中へ戻すのは運営者だけ (WP-CLI) なので、戻すボタンは無い。
  */
 
 import { useSelect } from '@wordpress/data';
@@ -13,6 +15,7 @@ import {
 	CardBody,
 	CardHeader,
 	ExternalLink,
+	Notice,
 	Spinner,
 	TextControl,
 	TextareaControl,
@@ -35,6 +38,17 @@ export function ProfileCard() {
 	const icon = useSelect( ( select ) => ( iconId ? select( coreStore ).getMedia( iconId ) : null ), [ iconId ] );
 	const { isLoaded, hasEdits, isSaving, save, notice, clearNotice } = useSiteSave();
 
+	// 準備中 → 公開 (T.11)。true / false 以外 (古い本体で設定が無い) なら何も出さない。
+	const [ preparing, setPreparing ] = useEntityProp( 'root', 'site', 'doujin_profile_preparing' );
+	const publish = () => {
+		// eslint-disable-next-line no-alert
+		if ( ! window.confirm( 'サイトを公開しますか？\n\nログインしていない人にも、トップページと作品が見えるようになります。準備中に戻したいときは運営者に連絡してください。' ) ) {
+			return;
+		}
+		setPreparing( false );
+		save();
+	};
+
 	return (
 		<Card>
 			<CardHeader>
@@ -45,6 +59,17 @@ export function ProfileCard() {
 				{ isLoaded && (
 					<>
 						<StatusNotice notice={ notice } onRemove={ clearNotice } />
+						{ true === preparing && (
+							<Notice status="warning" isDismissible={ false } className="doujin-profile-notice">
+								<p>
+									このサイトは<strong>準備中</strong>です。ログインしていない人には「準備中です」とだけ表示され、検索にも載りません。内容がそろったら公開してください。
+								</p>
+								<Button variant="primary" __next40pxDefaultSize onClick={ publish } disabled={ isSaving } isBusy={ isSaving }>
+									公開する
+								</Button>
+							</Notice>
+						) }
+						{ false === preparing && <p className="description doujin-profile-field-help">このサイトは<strong>公開中</strong>です。</p> }
 						<TextControl
 							__nextHasNoMarginBottom
 							__next40pxDefaultSize

@@ -11,7 +11,8 @@
  *   includes/blocks.php          公開側の独自ブロックの登録と、描き方の共用関数 (ブロックの定義は src/blocks/)
  *   includes/patterns.php        パターン (プロフィールの見出し・トップページ)
  *   includes/init-site.php       新しいサイトの初期設定 (wp_initialize_site。https・初期データの削除・トップページ)
- *   includes/cli.php             WP-CLI (wp doujin init-site / import / export)
+ *   includes/preparing.php       準備中 (設定 doujin_profile_preparing。編集できない訪問者には「準備中です」だけ)
+ *   includes/cli.php             WP-CLI (wp doujin init-site / import / export / invite / publish / doctor)
  *   includes/age-gate.php        年齢確認 (成人向けの印が付いたサイトだけ)
  *   includes/head.php            head の説明文・OGP・Twitter カード (テーマに依存しない)
  *   src/                         JS のソース。build/ に手元でビルドしてコミットする (サーバに node は無い)
@@ -36,6 +37,7 @@ require_once DOUJIN_PROFILE_DIR . '/includes/cover-import.php';
 require_once DOUJIN_PROFILE_DIR . '/includes/blocks.php';
 require_once DOUJIN_PROFILE_DIR . '/includes/patterns.php';
 require_once DOUJIN_PROFILE_DIR . '/includes/init-site.php';
+require_once DOUJIN_PROFILE_DIR . '/includes/preparing.php';
 require_once DOUJIN_PROFILE_DIR . '/includes/cli.php';
 require_once DOUJIN_PROFILE_DIR . '/includes/age-gate.php';
 require_once DOUJIN_PROFILE_DIR . '/includes/head.php';
