@@ -1461,3 +1461,13 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 
 - 原因が確定: さくらの postmaster のメールボックスに戻ってきたエラーメール 2 通(招待の「[同人プロフィール] ログインの詳細」と試験のメール)とも、Gmail が **`550-5.7.26 … the sender is unauthenticated. Gmail requires all senders to authenticate with either SPF or DKIM.`** で断っていた。裏の差出人 `tsff@www1191.sakura.ne.jp` に SPF も DKIM も無いため。
 - 方針: サイト所有者がさくらのコントロールパネルで `dp.no32.tk` を登録して送信用のアドレスを作り、Claude が配布プラグイン WP Mail SMTP をネットワーク有効化して、そのアドレスで SMTP 認証して送る(パスワードは `wp-config.php` の定数にだけ置く)。`dp.no32.tk` の SPF(`a:www1191.sakura.ne.jp`)がそのまま効く。
+
+### 送信用アドレスと WP Mail SMTP(T.53.2)
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-25 | ユーザ作業 | 「なんか入れないな」→ コントロールパネルに入れなかった → 「追加したつもりです」(`~/MailBox/noreply` ができていた) |
+| 2026-10-25 | ユーザ了承 | アドレスは `noreply@dp.no32.tk`「はい、合ってます」 |
+
+手順(実行前に記す): `wp-config.php` を `~/dumps/pre-doujin-profile-smtp-20261025/` に退避(600)→ 「編集が必要なのはここまでです」の前に WP Mail SMTP の定数(`WPMS_ON`・`WPMS_MAILER=smtp`・`WPMS_SMTP_HOST=www1191.sakura.ne.jp`・`WPMS_SMTP_PORT=587`・`WPMS_SSL=tls`・`WPMS_SMTP_AUTH`・`WPMS_SMTP_USER=noreply@dp.no32.tk`・`WPMS_MAIL_FROM=noreply@dp.no32.tk`・`WPMS_MAIL_FROM_FORCE`・`WPMS_SET_RETURN_PATH`)を足す。パスワード `WPMS_SMTP_PASS` はサイト所有者が SSH で 1 行足す(Claude は値を見ない)→ WP Mail SMTP をネットワーク有効化 → `+dptest` に試験メール。
+戻し方: プラグインをネットワーク無効化し、退避した `wp-config.php` に戻す。
