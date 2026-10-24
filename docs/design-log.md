@@ -1202,3 +1202,5 @@ Claude の整理(案。裁定待ち):
 4. 確かめる: `ftsf.dp.no32.tk` の「Hello world」でコメント欄が出ないこと、`X-Pingback` が出ないこと、`xmlrpc.php` の認証の要るメソッドが「無効」で返ること。ログインと表示が壊れていないこと。
 
 戻し方: `wp plugin deactivate --network` → `wp plugin uninstall` の両方。それでも戻らなければ 1. のダンプを `wp db import`。
+
+結果: 両方をネットワーク有効化。`wp disable-comments settings --types=all --xmlrpc --rest-api` はメインサイトの設定(`wp_options`)に書いたが、ネットワーク有効のときにプラグインが読むのはネットワークの設定(`sitemeta`)なので、そちらへ移してメインサイトの設定は消した。確認: `dp.no32.tk`・`ftsf.dp.no32.tk` の「Hello world」でコメント欄なし・`X-Pingback` なし、`wp.getUsersBlogs` は 405「XML-RPC サービスが無効」、`pingback.ping` は受け付けない、トップとログイン画面は 200。自作の `mu-plugins/profile-site-hardening.php` はリポジトリから消した(旧ホストには残っている)。
