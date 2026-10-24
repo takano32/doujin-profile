@@ -1418,3 +1418,10 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 | 日付 | 種別 | 内容 |
 |---|---|---|
 | 2026-10-25 | ユーザ裁定 | 「新しく招待したマンガ家さんのサイトは、最初から誰でも見られるようにしますか？」に「持ち主が自分で公開」(T.11)。招待直後は準備中、持ち主がマイページのボタンで公開する。準備中に戻すのは運営者(WP-CLI)。既存の ftsf は公開のまま |
+
+## 2026-10-25 招待・公開・点検のコマンド、準備中、検収の検査を配備
+
+- Fable が作った(`includes/preparing.php` 95 行、`cli.php` に invite / publish / doctor、`scripts/check-site.sh`)。Claude が準備中の判定と権限を読んで確認し、退避のあと配備した。
+- Fable の判断: 準備中は 503 ではなく **200 + noindex**(Caddy の `ask` が 2xx でサイトの存在を見るため。503 だと証明書が取れず持ち主もログインできない。spec §7.6 の書き換えが要る)。招待したサイトは `blog_public=1`(準備中の間は noindex)。招待メールはコアの `wp_new_user_notification`(リンクはメインサイトの `wp-login.php?action=rp`)。準備中に戻せるのは特権管理者か WP-CLI だけ。doctor の `--fix` は書き換え規則・公開日時の再計算・消えたサンプルの除去の 3 つだけ。
+- `wp doujin doctor`(読み取り)はネットワークと ftsf で NG 0。`scripts/check-site.sh https://ftsf.dp.no32.tk/` も NG 0(未実装の項目: 未認証の media 一覧、著者アーカイブの転送)。
+- invite の本番での試験は、メールを送るのでサイト所有者に聞いてから。
