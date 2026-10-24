@@ -1,0 +1,31 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "doujin-profile/work-card",
+	"title": "作品カード",
+	"category": "doujin-profile",
+	"icon": "book",
+	"description": "作品 (投稿) の書影・タイトル・作家・発売日・あらすじ・サンプル・販売先を、投稿のデータから描きます。作品の本文か、クエリーループの中に置きます。",
+	"keywords": [ "作品", "同人", "work" ],
+	"usesContext": [ "postId", "postType" ],
+	"supports": {
+		"html": false,
+		"reusable": false,
+		"color": {
+			"background": true,
+			"text": true,
+			"link": true
+		},
+		"spacing": {
+			"margin": true,
+			"padding": true
+		},
+		"typography": {
+			"fontSize": true
+		}
+	},
+	"editorScript": "file:./index.js",
+	"style": [ "wp-block-buttons", "wp-block-button", "file:./style-index.css" ],
+	"viewScript": "file:./view.js",
+	"render": "file:./render.php"
+}

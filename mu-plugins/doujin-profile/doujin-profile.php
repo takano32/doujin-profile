@@ -8,6 +8,8 @@
  *   includes/login-redirect.php  ログイン後にマイページへ直行
  *   includes/my-page.php         マイページの入れ物 (メニュー・スクリプトの読み込み)
  *   includes/cover-import.php    書影・サンプルの取り込み (作品番号から。唯一の独自 REST)
+ *   includes/blocks.php          公開側の独自ブロックの登録と、描き方の共用関数 (ブロックの定義は src/blocks/)
+ *   includes/patterns.php        パターン (プロフィールの見出し・トップページ)
  *   src/                         JS のソース。build/ に手元でビルドしてコミットする (サーバに node は無い)
  *
  * Multisite ではネットワーク内の全サイトで読み込まれる。登録はどれもサイト単位 (init で毎回)。
@@ -27,3 +29,5 @@ require_once DOUJIN_PROFILE_DIR . '/includes/search.php';
 require_once DOUJIN_PROFILE_DIR . '/includes/login-redirect.php';
 require_once DOUJIN_PROFILE_DIR . '/includes/my-page.php';
 require_once DOUJIN_PROFILE_DIR . '/includes/cover-import.php';
+require_once DOUJIN_PROFILE_DIR . '/includes/blocks.php';
+require_once DOUJIN_PROFILE_DIR . '/includes/patterns.php';

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "doujin-profile/more-works",
+  "title": "さらに作品を見る",
+  "category": "doujin-profile",
+  "icon": "plus-alt2",
+  "description": "クエリーループの次のページの作品を、押すと下に継ぎ足します。クエリーループの中 (投稿テンプレートの後) に置きます。",
+  "keywords": [
+    "もっと見る",
+    "ページ送り",
+    "more"
+  ],
+  "ancestor": [
+    "core/query"
+  ],
+  "usesContext": [
+    "queryId",
+    "query"
+  ],
+  "attributes": {
+    "label": {
+      "type": "string",
+      "default": "さらに作品を見る"
+    }
+  },
+  "supports": {
+    "html": false,
+    "spacing": {
+      "margin": true
+    },
+    "typography": {
+      "fontSize": true
+    }
+  },
+  "editorScript": "file:./index.js",
+  "style": [
+    "wp-block-buttons",
+    "wp-block-button"
+  ],
+  "viewScript": "file:./view.js",
+  "render": "file:./render.php"
+}

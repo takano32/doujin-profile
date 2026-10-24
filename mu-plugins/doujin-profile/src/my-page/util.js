@@ -8,7 +8,7 @@ import { Notice } from '@wordpress/components';
 // PHP 側 (includes/my-page.php) が渡す、保存しないサイトの情報。
 export const data = window.doujinProfileData || {};
 
-// 作品の本文に置く作品カード (spec §6.2)。ブロック自体はまだ無い (次の段)。本文が空のときだけ入れる。
+// 作品の本文に置く作品カード (spec §6.2。src/blocks/work-card/)。本文が空のときだけ入れる。
 export const WORK_CARD_BLOCK = '<!-- wp:doujin-profile/work-card /-->';
 
 /**

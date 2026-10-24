@@ -1,0 +1,54 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "doujin-profile/links",
+	"title": "リンクボタン",
+	"category": "doujin-profile",
+	"icon": "admin-links",
+	"description": "マイページのリンク集 (販売ページ、またはお知らせ・活動情報) をボタンで並べます。",
+	"keywords": [ "リンク", "販売", "SNS", "links" ],
+	"attributes": {
+		"list": {
+			"type": "string",
+			"enum": [ "shops", "accounts" ],
+			"default": "shops"
+		}
+	},
+	"variations": [
+		{
+			"name": "shops",
+			"title": "リンクボタン (販売ページ)",
+			"description": "FANZA・DLsite・BOOTH など、サークルの販売ページ。",
+			"attributes": { "list": "shops" },
+			"isDefault": true,
+			"isActive": [ "list" ],
+			"scope": [ "inserter", "transform" ]
+		},
+		{
+			"name": "accounts",
+			"title": "リンクボタン (お知らせ・活動情報)",
+			"description": "X・pixiv・Bluesky など、ふだん活動している所。",
+			"attributes": { "list": "accounts" },
+			"isActive": [ "list" ],
+			"scope": [ "inserter", "transform" ]
+		}
+	],
+	"supports": {
+		"html": false,
+		"color": {
+			"background": true,
+			"text": true,
+			"link": true
+		},
+		"spacing": {
+			"margin": true,
+			"padding": true
+		},
+		"typography": {
+			"fontSize": true
+		}
+	},
+	"editorScript": "file:./index.js",
+	"style": [ "wp-block-buttons", "wp-block-button" ],
+	"render": "file:./render.php"
+}
