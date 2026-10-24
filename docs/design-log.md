@@ -1182,3 +1182,23 @@ Claude の整理(案。裁定待ち):
 戻し方: `wp site delete <blog_id> --yes`(サイトのテーブルとアップロードを消す。ユーザ `ftsf` は消えない)。それでも戻らなければ 1. のダンプを `wp db import`。
 
 結果: blog_id 4 で作成。`home`・`siteurl` を https にした。`ftsf` はそのサイトの administrator。Caddy 経由でトップ 200、`/wp-admin/` は `https://ftsf.dp.no32.tk/wp-login.php` へ 302、証明書は on-demand で発行された。
+
+---
+
+## 2026-10-24 コメントと XML-RPC の守りを配布物のプラグインにする(ユーザ裁定。選択式)
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-24 | ユーザ質問 | 「プラグインでできないんか？」「普通に配布されてるやつね」 |
+| 2026-10-24 | ユーザ裁定 | 「配布物を 2 つ入れる」(推奨は Disable Comments だけだった) |
+
+- wordpress.org の **Disable Comments**(100 万以上で有効。ネットワーク有効化で全サイトに一括で効く。ピンバックと `X-Pingback` も止める)と **Disable XML-RPC**(20 万以上。`xmlrpc_enabled` を false にするだけ。Multisite で効かないというレビューあり → 入れたあと確かめる)。
+- 自作の `mu-plugins/profile-site-hardening.php` は置かずに取り下げる(T.30)。
+
+手順(実行前に記す):
+1. `~/dumps/pre-doujin-profile-comments-xmlrpc-20261024/` に `wp db export`。
+2. `wp plugin install disable-comments disable-xml-rpc` → `wp plugin activate --network` の両方。
+3. Disable Comments の設定をネットワーク全体・すべての投稿タイプで「止める」にする。
+4. 確かめる: `ftsf.dp.no32.tk` の「Hello world」でコメント欄が出ないこと、`X-Pingback` が出ないこと、`xmlrpc.php` の認証の要るメソッドが「無効」で返ること。ログインと表示が壊れていないこと。
+
+戻し方: `wp plugin deactivate --network` → `wp plugin uninstall` の両方。それでも戻らなければ 1. のダンプを `wp db import`。
