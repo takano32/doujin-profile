@@ -201,27 +201,21 @@
 	max-height: 200px;
 }
 
-.doujin-profile-cover-tools {
+.doujin-profile-cover-field .doujin-profile-actions {
 	flex: 1 1 240px;
-	display: flex;
-	flex-direction: column;
-	gap: 16px;
+	align-items: flex-start;
 }
 
+/* 作品番号から取り込む */
 .doujin-profile-import {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: flex-start;
-	gap: 8px 12px;
+	padding: 12px;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	background: #f6f7f7;
 }
 
 .doujin-profile-import .components-base-control {
-	flex: 1 1 220px;
-	margin-bottom: 0;
-}
-
-.doujin-profile-import .components-button {
-	margin-top: 24px; /* ラベルの高さぶん下げて入力欄と揃える */
+	max-width: 320px;
 }
 
 /* リンクの一覧 */
@@ -352,10 +346,6 @@
 
 	.doujin-profile-cover-preview {
 		flex-basis: 100%;
-	}
-
-	.doujin-profile-import .components-button {
-		margin-top: 0;
 	}
 
 	.doujin-profile-samples {

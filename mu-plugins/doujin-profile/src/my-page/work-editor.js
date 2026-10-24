@@ -21,8 +21,9 @@ import {
 	ToggleControl,
 } from '@wordpress/components';
 
-import { StatusNotice, WORK_CARD_BLOCK, errorText, useNotice } from './util';
+import { data, StatusNotice, WORK_CARD_BLOCK, errorText, useNotice } from './util';
 import { ArtistField } from './artists';
+import { ImportField } from './import';
 import { CoverField } from './cover';
 import { SamplesField } from './samples';
 import { LinkList, cleanLinks, findBadLink } from './link-list';
@@ -117,7 +118,7 @@ export function WorkEditor( { id, onBack } ) {
 		}
 	};
 
-	// 書影の取り込みの結果 (cover.js)。アイキャッチはサーバが設定済み。リンク・題名・発売日時は編集として受け、「保存」で書く。
+	// 書影の取り込みの結果 (import.js)。アイキャッチはサーバが設定済み。リンク・題名・発売日時は編集として受け、「保存」で書く。
 	const onImported = ( result ) => {
 		const edits = { featured_media: result.featured_media, meta: {} };
 		const links = Array.isArray( meta.doujin_shop_links ) ? meta.doujin_shop_links : [];
@@ -133,6 +134,24 @@ export function WorkEditor( { id, onBack } ) {
 		edit( edits );
 	};
 
+	// サンプルの取り込み (import.js)。1 枚ずつ続けて届くので、閉じ込めた meta ではなくストアの今の並びに足す。
+	// まだ入っていない ID だけを末尾に足し、足したあとの枚数を返す (上限の判定は呼ぶ側)。
+	const appendSamples = ( newIds ) => {
+		const current = registry.select( coreStore ).getEditedEntityRecord( 'postType', 'post', id );
+		const list = current && current.meta && Array.isArray( current.meta.doujin_sample_ids ) ? current.meta.doujin_sample_ids : [];
+		const max = data.maxSamples || 80;
+		const next = [ ...list ];
+		newIds.forEach( ( sampleId ) => {
+			if ( sampleId > 0 && ! next.includes( sampleId ) && next.length < max ) {
+				next.push( sampleId );
+			}
+		} );
+		if ( next.length !== list.length ) {
+			setMeta( 'doujin_sample_ids', next );
+		}
+		return next.length;
+	};
+
 	const viewUrl = saved && saved.link ? ( isPublic ? saved.link : addQueryArgs( saved.link, { preview: true } ) ) : '';
 
 	return (
@@ -145,6 +164,7 @@ export function WorkEditor( { id, onBack } ) {
 			</CardHeader>
 			<CardBody>
 				<StatusNotice notice={ notice } onRemove={ clearNotice } />
+				<ImportField workId={ id } title={ work.title } onCover={ onImported } onSamples={ appendSamples } disabled={ locked } />
 				<TextControl
 					__nextHasNoMarginBottom
 					__next40pxDefaultSize
@@ -167,7 +187,6 @@ export function WorkEditor( { id, onBack } ) {
 					workId={ id }
 					value={ work.featured_media || 0 }
 					onChange={ ( featured_media ) => edit( { featured_media } ) }
-					onImported={ onImported }
 					disabled={ locked }
 				/>
 				<div className="doujin-profile-release">

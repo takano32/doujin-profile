@@ -7,7 +7,7 @@
  *   includes/search.php          サイト内検索で作家名でも当たる手当て
  *   includes/login-redirect.php  ログイン後にマイページへ直行
  *   includes/my-page.php         マイページの入れ物 (メニュー・スクリプトの読み込み)
- *   includes/cover-import.php    書影の取り込み (作品番号から。唯一の独自 REST)
+ *   includes/cover-import.php    書影・サンプルの取り込み (作品番号から。唯一の独自 REST)
  *   src/                         JS のソース。build/ に手元でビルドしてコミットする (サーバに node は無い)
  *
  * Multisite ではネットワーク内の全サイトで読み込まれる。登録はどれもサイト単位 (init で毎回)。

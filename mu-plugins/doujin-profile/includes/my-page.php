@@ -4,7 +4,7 @@
  *
  * 管理画面の最上位メニュー「マイページ」(admin.php?page=doujin-profile) に、ビルド済みの
  * スクリプト build/my-page.js を読み込む。画面の中身は src/my-page/ (React。WordPress 同梱の部品 + 同梱の SortableJS) で、
- * 保存はすべて標準の REST (例外は書影の取り込み。includes/cover-import.php)。ここは PHP 側の入れ物だけ。
+ * 保存はすべて標準の REST (例外は書影・サンプルの取り込み。includes/cover-import.php)。ここは PHP 側の入れ物だけ。
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -46,7 +46,7 @@ add_action( 'admin_menu', 'doujin_profile_add_my_page_menu' );
  */
 function doujin_profile_render_my_page() {
 	echo '<div class="wrap doujin-profile-my-page-wrap">';
-	echo '<h1 class="screen-reader-text">マイページ</h1>';
+	echo '<h1>マイページ</h1>'; // 見出しはここだけ (JS 側は出さない)。
 	if ( ! doujin_profile_build_asset( 'my-page' ) ) {
 		echo '<div class="notice notice-error"><p>マイページのスクリプトがビルドされていません (mu-plugins/doujin-profile/ で <code>npm run build</code> してから配備してください)。</p></div>';
 	}
@@ -70,7 +70,7 @@ function doujin_profile_enqueue_my_page( $hook_suffix ) {
 		return;
 	}
 
-	// 画面が要る、サイトの情報。保存はしない (保存は REST。書影の取り込みだけ独自の REST。includes/cover-import.php)。
+	// 画面が要る、サイトの情報。保存はしない (保存は REST。書影・サンプルの取り込みだけ独自の REST。includes/cover-import.php)。
 	$data = array(
 		'homeUrl'       => home_url( '/' ),
 		'adminUrl'      => admin_url(),
@@ -79,7 +79,8 @@ function doujin_profile_enqueue_my_page( $hook_suffix ) {
 		'services'      => doujin_profile_services(),
 		'maxLinks'      => DOUJIN_PROFILE_MAX_LINKS,
 		'maxSamples'    => DOUJIN_PROFILE_MAX_SAMPLES,
-		'coverImportPath' => '/' . DOUJIN_PROFILE_REST_NAMESPACE . '/works/%d/cover', // %d に作品の投稿 ID を入れる。
+		'coverImportPath'  => '/' . DOUJIN_PROFILE_REST_NAMESPACE . '/works/%d/cover',   // %d に作品の投稿 ID を入れる。
+		'sampleImportPath' => '/' . DOUJIN_PROFILE_REST_NAMESPACE . '/works/%d/samples',
 	);
 	wp_add_inline_script( $handle, 'var doujinProfileData = ' . wp_json_encode( $data ) . ';', 'before' );
 }
