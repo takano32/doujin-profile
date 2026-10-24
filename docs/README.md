@@ -12,7 +12,7 @@ doujin-profile は `https://profile.xwp.jp/<slug>/` にユーザごとの同人�
 | [`design-log.md`](design-log.md) | 設計の**過程**。いつ何を調べ、何を比べ、誰が何を決めたか | 追記のみ・時系列。裁定は「ユーザ裁定 YYYY-MM-DD」 |
 | [`environment.md`](environment.md) | 導入先で**実測した事実**と作業ガード | 確かめたことだけ。調査日と方法を明記 |
 | [`xserver-inquiry.md`](xserver-inquiry.md) | ホスト(Xserver)への**問い合わせ文案**と、回答ごとの次の動き | 送るのはサイト所有者。回答の原文は公開リポジトリに載せず、design-log には日付と要旨だけ |
-| [`multisite-trial.md`](multisite-trial.md) | Multisite 化の検証(Phase 0)の**手順・結果・戻し方** | 変更の前に手順と戻し方を書き、実施後に結果を足す |
+| [`multisite-trial.md`](multisite-trial.md) | 旧ホストでの Multisite 化の検証(T.47)の**手順・結果・戻し方** | 変更の前に手順と戻し方を書き、実施後に結果を足す |
 | [`caddy-front-trial.md`](caddy-front-trial.md) | 前段 Caddy + サブドメイン型 Multisite(`*.dp.no32.tk`)の仮運用の**手順・結果・戻し方** | 変更の前に手順と戻し方を書き、実施後に結果を足す |
 | [`hosting-research.md`](hosting-research.md) | **移転先ホスティングの調査**(成人向けコンテンツを許容する WordPress 環境) | 各社の公式ページの原文と出典。調査日を明記。規約は変わるので契約前に再確認 |
 
