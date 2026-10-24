@@ -104,7 +104,8 @@ doujin-profile の仕事と、決めることの一覧。**ここが台帳の正
   - [x] **T.36.1** 設計案。2026-10-24「Fable max」: `docs/owner-editor-design.md`(提案。管理画面の 1 画面を WordPress 同梱の部品 + 標準 REST で、データは投稿メタ・分類・サイト設定、ビルドは `@wordpress/scripts`、並べ替えだけ SortableJS を同梱、CDN と Astro は使わない)
   - [x] **T.36.2** 決めごと Q1〜Q21。2026-10-24 選択式で: **作り方 = 管理画面の中の専用画面**(WordPress 同梱の部品 + 標準 REST)、**外部 JS = 足りないものだけ npm で同梱**(CDN は使わない)、**ビルド = `@wordpress/scripts`**(手元で build → コミット → `scripts/deploy.sh --go`。GitHub Actions はビルドし忘れの検査だけ。Astro は使わない)。残り 16 件は「Fable max で判断」→ 決定は `docs/owner-editor-design.md` §7.1。確認の結果(2026-10-24 選択式): **並べ替えはドラッグ**(SortableJS)、**英語欄は最初は無し**、**発売前後のリンクは手で直す**、**書影は FANZA・DLsite の作品番号を入れて「取り込む」ボタンで、画像をメディアへ取り込み、販売ページのリンクも埋める**(「ボタンで取り込む」)
   - [ ] **T.36.3** spec を決定に合わせて書き換える(§1.2 原則 4、§1.3、§2、§3.1、§6.0、§6.2、§6.4、§7.2、§7.3、§8、§9.1、§12、§13。`docs/owner-editor-design.md` §7.1)
-  - [ ] **T.36.4** 書影の取り込み: さくらから FANZA・DLsite の画像が取れるか(年齢確認・地域の制限)と、作品番号から画像とページの URL を組む規則を確かめる
+  - [x] **T.36.4** 書影の取り込みの下調べ。2026-10-24: さくらから FANZA(`doujin-assets.dmm.co.jp/digital/comic/<cid>/<cid>pl.jpg`、年齢確認なし)と DLsite(作品情報の JSON の `work_image`。題名・発売日も取れる)の画像が取れる。`docs/owner-editor-design.md` §9
+  - [ ] **T.36.6** 取り込みで埋める販売リンクにアフィリエイトの ID を付けるか(f_tsf は付けている。持ち主ごとの設定) 👤
   - [ ] **T.36.5** マイページの実装(最初の版。T.32 と並行)
 
 ## 決まったこと(旧 J 番号のうち、上の T に入らなかったもの)
