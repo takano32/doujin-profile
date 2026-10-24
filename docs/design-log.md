@@ -1425,3 +1425,11 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 - Fable の判断: 準備中は 503 ではなく **200 + noindex**(Caddy の `ask` が 2xx でサイトの存在を見るため。503 だと証明書が取れず持ち主もログインできない。spec §7.6 の書き換えが要る)。招待したサイトは `blog_public=1`(準備中の間は noindex)。招待メールはコアの `wp_new_user_notification`(リンクはメインサイトの `wp-login.php?action=rp`)。準備中に戻せるのは特権管理者か WP-CLI だけ。doctor の `--fix` は書き換え規則・公開日時の再計算・消えたサンプルの除去の 3 つだけ。
 - `wp doujin doctor`(読み取り)はネットワークと ftsf で NG 0。`scripts/check-site.sh https://ftsf.dp.no32.tk/` も NG 0(未実装の項目: 未認証の media 一覧、著者アーカイブの転送)。
 - invite の本番での試験は、メールを送るのでサイト所有者に聞いてから。
+
+### invite の試験(ユーザ了承)
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-25 | ユーザ了承 | 「招待コマンドを、一時的なサイト dptest.dp.no32.tk で試しますか？」に「あなたのメールに送って試す」(アドレスはリポジトリに書かない) |
+
+手順: dry-run と誤りの例 → `invite dptest <サイト所有者のアドレス> --title=試験 --mature` → 準備中の表示・証明書・マイページ → 公開 → `publish --unpublish` → `wp site delete` と `wp user delete dptest --network` で片づける。
