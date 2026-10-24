@@ -9,7 +9,7 @@
 | 前段 | e2-micro(`ssh takano32@35.212.198.233`、Caddy 2.6.2。`environment.md` §C) |
 | 裏側 | ターゲット `sakura`(`~/www/doujin-profile/`、WordPress 単一サイト・初期データだけ。`environment.md` §S) |
 | DNS | `dp.no32.tk` と `*.dp.no32.tk` は e2-micro を向いている(追加は要らない) |
-| 状態 | **未実施**(各段階の前に、サイト所有者の了承を得る) |
+| 状態 | 段階 A は実施済み(2026-10-24、結果は §4)。B・C は未実施(各段階の前に、サイト所有者の了承を得る) |
 
 秘匿値の扱い: Caddy とさくらのあいだの共有の秘密(下の `DP_PROXY_SECRET`)は、サーバの上にだけ置く。リポジトリ・チャットには書かない。
 
@@ -103,4 +103,19 @@ dp.no32.tk, *.dp.no32.tk {
 
 ## 4. 結果
 
-(実施後に書く)
+### 段階 A(2026-10-24 12:43 JST、ユーザ了承「A いいよ」)
+
+確認用の PHP(推測されにくい名前)を `~/www/doujin-profile/` に置き、3 通りに送って、すぐ消した(消したあとは 404)。
+
+| 送り方 | `HTTP_X_DP_*` | `REMOTE_ADDR` | ほか |
+|---|---|---|---|
+| 手元から `https://doujin-profile.no32.tk/` へ直接 | 3 つとも届いた | 手元の IP | `HTTPS=on`、`HTTP_X_REAL_IP` と `HTTP_X_SAKURA_FORWARDED_FOR` も手元の IP |
+| 手元から `tsff.sakura.ne.jp` へ、SNI と Host は `doujin-profile.no32.tk`(Caddy と同じつなぎ方) | 届いた | 手元の IP | 同上 |
+| **e2-micro から**同じつなぎ方 | **届いた** | **e2-micro の IP**(`35.212.198.233`) | 同上 |
+
+分かったこと:
+
+- **独自のヘッダは PHP まで届く。** 段階 C の `wp-config.php` の受け取り方で成り立つ。
+- `REMOTE_ADDR` は、さくらの nginx に直接つないだ相手の IP になる(さくらが置き換えている)。前段を通すと Caddy の IP になるので、訪問者の IP は `X-DP-Client-IP` で受け取る必要がある。
+- **送った `X-Forwarded-For` は PHP に届かなかった**(さくらの nginx が消している)。標準的な `X-Forwarded-For` には頼れず、独自のヘッダで渡すのが正しい。
+- 秘密に加えて「`REMOTE_ADDR` が Caddy の IP であること」も条件にできる(ただし本番で Caddy の IP が変わると直す場所が増えるので、秘密を主にする)。
