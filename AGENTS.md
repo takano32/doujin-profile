@@ -13,11 +13,13 @@
 
 ## いまの状態(2026-10-24 時点。最新は design-log が正)
 
-- **デプロイ先がさくらのレンタルサーバに変わった**(2026-10-24)。公開 URL は `https://doujin-profile.no32.tk/`。WordPress 7.0.2 の**単一サイト**(Multisite ではない)、管理者は `takano32` だけ。mu-plugin はまだ配備していない。
-- 旧ホスト `profile.xwp.jp`(Xserver for WordPress。Multisite 化済み、サイトは `/` と `/ftsf/`)は 2026-09-18 の状態のまま。`docs/environment.md` の §2 以降は旧ホストの実測。
-- 運営者は **`takano32` と `ftsf` の 2 名**。`ftsf` は旧ホストの `/ftsf/` の持ち主でもある。
-- コードは堅牢化用の `mu-plugins/profile-site-hardening.php`(XML-RPC とコメントを停止)と配備スクリプトだけ。本体は未着手。
-- 未決: 移転先での成人向けの扱い(2026-09-18 の調査では、さくらのレンタルサーバは「アダルトサイト ×」。`docs/hosting-research.md`)、新しいホストを Multisite にするか、「マンガを編集」の範囲、2 段階認証。
+- **本番はさくらのレンタルサーバ**(`~/www/doujin-profile/`)。**サブドメイン型の Multisite** で、ネットワークは `https://dp.no32.tk/`、各サイトは `https://<名前>.dp.no32.tk/`(spec v0.6)。中身はメインサイトの初期データだけ。ユーザは `takano32` だけ。
+- **前段に Caddy**(GCP の e2-micro、米国)。サイトごとの証明書(on-demand TLS + ask)と、さくらへの中継。本当のホスト名と訪問者の IP は合言葉付きのヘッダで渡し、`wp-config.php` の数行で受け取る。手順と戻し方は `docs/caddy-front-trial.md`。
+- **ログインは未確認**: さくらの国外 IP フィルタが、米国の前段から来る `wp-login.php`・`wp-admin/` を 403 で拒む。サイト所有者がフィルタを切るのを待っている(spec D25)。
+- 旧ホスト `profile.xwp.jp`(Xserver。サブディレクトリ型の Multisite)は 2026-09-18 の状態のまま(spec D26)。
+- コードは堅牢化用の `mu-plugins/profile-site-hardening.php`(さくらには未配備)と `scripts/` だけ。本体は未着手。
+- ホストの規約は当面の判断材料にしない(当面は公開しない)。
+- 未決: 本番の前段の置き場所(D24)、「マンガを編集」の範囲(D17)、2 段階認証(D19)。**サイト所有者から追加の仕様が届く予定**(2026-10-24 時点で未着)。
 
 ## 作業の約束(サイト所有者との取り決め)
 
