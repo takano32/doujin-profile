@@ -1,0 +1,24 @@
+/* マイページの並べ方だけ。色・文字は管理画面と wp.components のまま */
+
+.doujin-profile-my-page {
+	max-width: 720px;
+}
+
+.doujin-profile-my-page .components-card {
+	margin-bottom: 24px;
+}
+
+.doujin-profile-card-title {
+	margin: 0;
+	font-size: 1.1em;
+}
+
+.doujin-profile-my-page .components-base-control {
+	margin-bottom: 16px;
+}
+
+.doujin-profile-actions {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+}

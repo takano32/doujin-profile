@@ -25,6 +25,8 @@ else
 fi
 
 # -a ではなく -rlt: 所有者・グループ・パーミッションはサーバ側の既定に任せる
+# 送るのは PHP と build/ だけ。JS のソースとビルドの道具 (src/・package*.json・webpack.config.js・node_modules/) は送らない (spec §12)
 rsync -rltv $DRY -e "$DP_SSH" \
 	--exclude='.DS_Store' --exclude='node_modules/' --exclude='*.map' \
+	--exclude='src/' --exclude='package.json' --exclude='package-lock.json' --exclude='webpack.config.js' \
 	mu-plugins/ "$DEST"
