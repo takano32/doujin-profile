@@ -74,6 +74,7 @@ dp.no32.tk, *.dp.no32.tk {
 
 - `DP_PROXY_SECRET` は systemd の上書き設定(`sudo systemctl edit caddy` で `Environment=DP_PROXY_SECRET=…`)に置く。
 - on-demand TLS は、仮運用では `ask` を付けずに始める(誰でも任意のサブドメインで証明書の発行を起こせてしまうので、Let's Encrypt のレート制限に当たりうる)。Multisite ができたら、存在するサイトだけ許可する `ask` を足す。
+- **ワイルドカード証明書にする案**(design-log 2026-10-24「ワイルドカード証明書でサービスできるかの調査」): `tls { on_demand }` の代わりに `tls { dns googleclouddns …; dns_challenge_override_domain <委任先> }` とし、サイトごとの名前を CT ログに出さない。プラグイン入りの Caddy への入れ替えと、DNS の CNAME 1 行が要る。どちらにするかは未決。
 - 反映は `caddy validate --config /etc/caddy/Caddyfile` が通ってから `sudo systemctl reload caddy`。
 
 戻し方: 退避した Caddyfile を戻して `sudo systemctl reload caddy`。

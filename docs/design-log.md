@@ -750,3 +750,42 @@ clone 先では引き継がれないので、公開しても問題ない範囲�
 - `REMOTE_ADDR` は直接つないだ相手(前段を通すと Caddy の IP)。送った `X-Forwarded-For` は届かなかった(さくらが消す)。訪問者の IP は独自のヘッダで渡す。
 - 確認用の PHP は消した(消したあとは 404)。詳細は `caddy-front-trial.md` §4。
 - 前段 Caddy → さくら の構成は成り立つ。次は段階 B(Caddyfile)。
+
+---
+
+## 2026-10-24 ワイルドカード証明書でサービスできるかの調査
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-24 | 依頼 | 「ねんのためだけど、ワイルドカード証明書でサービスできないかも調べてね」 |
+
+Let's Encrypt でワイルドカード証明書(`*.dp.no32.tk`)を取るには **DNS 認証(DNS-01)が必須**。`_acme-challenge.dp.no32.tk` の TXT レコードを、発行・更新(約 60 日ごと)のたびに自動で書き換えられる必要がある。
+
+### 調べたこと(2026-10-24)
+
+| 道具 | value-domain への対応 |
+|---|---|
+| Caddy の DNS プラグイン(`caddy-dns/*`、`libdns`) | 無い |
+| acme.sh の `dnsapi/` | 無い(`dns_v*` は variomedia・veesp・vercel・virakcloud・volcengine・vscale・vultr) |
+| lego の `providers/dns/`(231 個) | 無い |
+| certbot | 有志のプラグインがある(`chrono-meter/certbot-dns-valuedomain` ほか。公式ではない) |
+| value-domain の API | ある(`https://api.value-domain.com/v1/`、Bearer 認証)。DNS は「設定の取得」「設定の変更(PUT)」で、レコード 1 件の追加ではなく設定全体の置き換えに見える(要確認)。自動化で他のレコードを壊すおそれがある |
+
+### 成り立つ案
+
+1. **CNAME での委任(推奨)**: value-domain に `_acme-challenge.dp.no32.tk` → API で書ける別のゾーン、の CNAME を 1 行だけ置く。別のゾーンは Google Cloud DNS(GCP は既にある。Caddy のプラグインは `caddy-dns/googleclouddns`)か、自前の acme-dns(`caddy-dns/acmedns`)。Caddy は `dns_challenge_override_domain` で委任先に TXT を書く。
+   - Caddy はプラグイン入りのビルドに入れ替える(Ubuntu の 2.6.2 にはプラグインが無い。最新は 2.11.7)。
+2. certbot + 有志のプラグインで取り、Caddy にはファイルで読ませる。更新後に Caddy を reload するフックが要る。value-domain の資格情報を前段のマシンに置き、設定全体を置き換える API を使う点が弱い。
+3. value-domain 用の libdns モジュールを自作する。標準優先から外れる。
+
+### on-demand TLS(サイトごとの証明書)との比較
+
+| 観点 | ワイルドカード | on-demand(サイトごと) |
+|---|---|---|
+| **名前が公開されるか** | `*.dp.no32.tk` だけが Certificate Transparency のログに載る | **サイトを作るたびに `<名前>.dp.no32.tk` が CT ログに載り、誰でも検索できる**。当面非公開という前提と相性が悪い |
+| 濫用・レート制限 | 1 枚なので心配が無い。`ask` も要らない | 任意の名前で発行を起こされうるので `ask` が要る |
+| 初回アクセス | すぐ | 発行の数秒を待つ |
+| 用意するもの | CNAME 1 行、委任先のゾーンと資格情報、プラグイン入りの Caddy | 何も要らない(いまの Caddy のまま) |
+| 本番(国内の Caddy)への移し替え | 委任先と資格情報を持っていくだけ | 何も要らない |
+
+Claude の推奨: **当面非公開なら、CNAME 委任でのワイルドカード証明書**。サイト名を CT ログに出さずに済むのが決め手。委任先は、GCP の上にある Google Cloud DNS が手軽。
