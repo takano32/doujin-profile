@@ -1,116 +1,76 @@
 /**
- * マイページ (spec §8) の最小の画面。
+ * マイページ (spec §8)。1 画面のタブ: プロフィール / リンク集 / 作品。スマホでは 1 列。
  *
- * この段では「WordPress 同梱の部品 + 標準 REST で読んで保存できる」芯を通すだけ:
- * サイト設定の blogname (サークル名) と blogdescription (リード文) を wp.coreData で読み、
- * 保存は wp/v2/settings へ (独自の保存口は無い)。リンク集・作品・サンプル画像は次の段で足す。
+ * WordPress 同梱の部品 (wp.components・wp.coreData・wp.data・wp.apiFetch・wp.mediaUtils) で描き、
+ * 保存はすべて標準の REST (wp/v2/settings・wp/v2/posts・wp/v2/media・wp/v2/artist)。
+ * 例外は書影の取り込み (cover.js → includes/cover-import.php) だけ。
+ * 外部の JS は、ドラッグで並べ替える SortableJS だけを npm で同梱する (sortable.js)。
  *
  * WordPress 同梱の部品は externals (wp.*) なので、ビルド物には含まれない。
+ *
+ *   profile.js      プロフィール (サークル名・リード文・アイコン)
+ *   links.js        リンク集 (販売ページ・お知らせ)      link-list.js  リンク一覧の編集 (共用)
+ *   works.js        作品の一覧・追加                       work-editor.js 作品の編集
+ *   cover.js        書影 (ドロップ・選ぶ・作品番号から取り込む)
+ *   samples.js      サンプル画像 (まとめて上げる・並べ替え)  artists.js    作家 (候補つき・新規)
+ *   media.js        アップロードと添付の読み出し           sortable.js   SortableJS の React 用の薄い包み
+ *   site.js         サイト設定の保存 (共用)                 util.js       小物
  */
 
 import { createRoot, useState } from '@wordpress/element';
-import { useSelect, useDispatch } from '@wordpress/data';
-import { store as coreStore, useEntityProp } from '@wordpress/core-data';
-import {
-	Button,
-	Card,
-	CardBody,
-	CardHeader,
-	ExternalLink,
-	Notice,
-	Spinner,
-	TextControl,
-	TextareaControl,
-} from '@wordpress/components';
+import { ExternalLink, TabPanel } from '@wordpress/components';
+
+import { data } from './util';
+import { ProfileCard } from './profile';
+import { LinksCard } from './links';
+import { WorksList } from './works';
+import { WorkEditor } from './work-editor';
 
 import './my-page.css';
 
-// PHP 側 (includes/my-page.php) が渡す、保存しないサイトの情報。
-const data = window.doujinProfileData || {};
-
-/**
- * プロフィール: サークル名とリード文。
- */
-function ProfileCard() {
-	const [ title, setTitle ] = useEntityProp( 'root', 'site', 'title' );
-	const [ description, setDescription ] = useEntityProp( 'root', 'site', 'description' );
-	const { isLoaded, hasEdits, isSaving } = useSelect( ( select ) => {
-		const { getEntityRecord, hasEditsForEntityRecord, isSavingEntityRecord } = select( coreStore );
-		return {
-			isLoaded: !! getEntityRecord( 'root', 'site' ),
-			hasEdits: hasEditsForEntityRecord( 'root', 'site' ),
-			isSaving: isSavingEntityRecord( 'root', 'site' ),
-		};
-	}, [] );
-	const { saveEditedEntityRecord } = useDispatch( coreStore );
-	const [ notice, setNotice ] = useState( null );
-
-	const save = async () => {
-		setNotice( null );
-		const saved = await saveEditedEntityRecord( 'root', 'site' );
-		setNotice(
-			saved
-				? { status: 'success', text: '保存しました。' }
-				: { status: 'error', text: '保存できませんでした。もう一度お試しください。' }
-		);
-	};
-
-	return (
-		<Card>
-			<CardHeader>
-				<h2 className="doujin-profile-card-title">プロフィール</h2>
-			</CardHeader>
-			<CardBody>
-				{ ! isLoaded && <Spinner /> }
-				{ isLoaded && (
-					<>
-						{ notice && (
-							<Notice status={ notice.status } onRemove={ () => setNotice( null ) }>
-								{ notice.text }
-							</Notice>
-						) }
-						<TextControl
-							__nextHasNoMarginBottom
-							__next40pxDefaultSize
-							label="サークル名"
-							value={ title || '' }
-							onChange={ setTitle }
-							disabled={ isSaving }
-						/>
-						<TextareaControl
-							__nextHasNoMarginBottom
-							label="リード文"
-							help="サイトの説明。トップページの見出しの下や、検索結果・SNS の説明文に使われます。"
-							value={ description || '' }
-							onChange={ setDescription }
-							disabled={ isSaving }
-							rows={ 3 }
-						/>
-						<div className="doujin-profile-actions">
-							<Button
-								variant="primary"
-								__next40pxDefaultSize
-								onClick={ save }
-								disabled={ ! hasEdits || isSaving }
-								isBusy={ isSaving }
-							>
-								保存
-							</Button>
-							{ data.homeUrl && <ExternalLink href={ data.homeUrl }>サイトを見る</ExternalLink> }
-						</div>
-					</>
-				) }
-			</CardBody>
-		</Card>
-	);
-}
+const TABS = [
+	{ name: 'profile', title: 'プロフィール' },
+	{ name: 'links', title: 'リンク集' },
+	{ name: 'works', title: '作品' },
+];
 
 function MyPage() {
+	// 開いている作品。タブを離れても覚えておく (タブの中身は切り替えで作り直されるため)。
+	const [ selectedWork, setSelectedWork ] = useState( null );
+
 	return (
 		<div className="doujin-profile-my-page">
 			<h1>マイページ</h1>
-			<ProfileCard />
-			<p className="description">リンク集と作品の編集は、次の段で足します。</p>
+			<TabPanel className="doujin-profile-tabs" tabs={ TABS } initialTabName="profile">
+				{ ( tab ) => {
+					if ( 'links' === tab.name ) {
+						return <LinksCard />;
+					}
+					if ( 'works' === tab.name ) {
+						return selectedWork ? (
+							<WorkEditor id={ selectedWork } onBack={ () => setSelectedWork( null ) } />
+						) : (
+							<WorksList onSelect={ setSelectedWork } />
+						);
+					}
+					return <ProfileCard />;
+				} }
+			</TabPanel>
+			<p className="description doujin-profile-footer">
+				見た目を変える: { data.themesUrl && <a href={ data.themesUrl }>テーマを選ぶ</a> }
+				{ data.siteEditorUrl && (
+					<>
+						{ ' / ' }
+						<a href={ data.siteEditorUrl }>色と文字・ページの編集</a>
+					</>
+				) }
+				{ data.homeUrl && (
+					<>
+						{ ' / ' }
+						<ExternalLink href={ data.homeUrl }>サイトを見る</ExternalLink>
+					</>
+				) }
+			</p>
 		</div>
 	);
 }

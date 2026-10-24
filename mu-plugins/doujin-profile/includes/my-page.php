@@ -3,8 +3,8 @@
  * マイページの入れ物 (spec §8)。
  *
  * 管理画面の最上位メニュー「マイページ」(admin.php?page=doujin-profile) に、ビルド済みの
- * スクリプト build/my-page.js を読み込む。画面の中身は src/my-page/ (React。WordPress 同梱の部品) で、
- * 保存はすべて標準の REST。ここは PHP 側の入れ物だけ。
+ * スクリプト build/my-page.js を読み込む。画面の中身は src/my-page/ (React。WordPress 同梱の部品 + 同梱の SortableJS) で、
+ * 保存はすべて標準の REST (例外は書影の取り込み。includes/cover-import.php)。ここは PHP 側の入れ物だけ。
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -70,11 +70,16 @@ function doujin_profile_enqueue_my_page( $hook_suffix ) {
 		return;
 	}
 
-	// 画面が要る、サイトの情報。保存はしない (保存は REST)。
+	// 画面が要る、サイトの情報。保存はしない (保存は REST。書影の取り込みだけ独自の REST。includes/cover-import.php)。
 	$data = array(
-		'homeUrl'  => home_url( '/' ),
-		'adminUrl' => admin_url(),
-		'services' => doujin_profile_services(),
+		'homeUrl'       => home_url( '/' ),
+		'adminUrl'      => admin_url(),
+		'themesUrl'     => admin_url( 'themes.php' ),
+		'siteEditorUrl' => admin_url( 'site-editor.php' ),
+		'services'      => doujin_profile_services(),
+		'maxLinks'      => DOUJIN_PROFILE_MAX_LINKS,
+		'maxSamples'    => DOUJIN_PROFILE_MAX_SAMPLES,
+		'coverImportPath' => '/' . DOUJIN_PROFILE_REST_NAMESPACE . '/works/%d/cover', // %d に作品の投稿 ID を入れる。
 	);
 	wp_add_inline_script( $handle, 'var doujinProfileData = ' . wp_json_encode( $data ) . ';', 'before' );
 }
