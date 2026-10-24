@@ -1247,3 +1247,12 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 - **WordPress 7.1 のブロックエディタ(HTTPS)ではブラウザ側で縮めて送る**ので、フィルタは finalize のときに `'update'` で呼ばれる。`'create'` だけを見ると取りこぼすため、context は見ない。
 - 7.1.3 では PNG も `-scaled` が作られる(除外は撤去済み)。画像の編集・回転・再生成は `original_image` が無ければ `-scaled` を使うので壊れない。
 - 本番で確かめる項目: メディアライブラリ・ブロックエディタ・REST の 3 経路で元が消えること、画像の編集と再生成、2560px 以下は何も起きないこと、アップロード時間、片づけ。
+
+### 本番への配備(ユーザ了承)
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-10-24 | ユーザ了承 | 「元の巨大画像を消すファイルを、さくらに置いて試しますか？」に「いま置いて試す」 |
+
+手順(実行前に記す): `~/dumps/pre-doujin-profile-discard-original-20261024/` に `wp db export` → `scripts/deploy.sh --go` → `ftsf.dp.no32.tk` に一時ユーザ(administrator)を足し、手元で作った 4000x5600 の jpg を REST と `wp media import` で上げて、元が消えて `-scaled` と縮小版だけが残ること、`original_image` が無いこと、再生成・2560px 以下・削除後に孤児ファイルが無いことを確かめる。試験の添付と一時ユーザは消す。
+戻し方: `scripts/remote.sh 'rm wp-content/mu-plugins/doujin-profile-discard-original-image.php'`(設定も DB も持たない)。
