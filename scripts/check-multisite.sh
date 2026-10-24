@@ -31,7 +31,7 @@ echo "-- DB"
 printf "テーブル接頭辞: "; wp db prefix 2>&1
 printf "テーブル数: "; wp db tables --all-tables 2>&1 | wc -l
 echo "-- ディスク"
-quota 2>/dev/null | tail -1 || df -h "$HOME" | tail -1
+q=$(quota 2>/dev/null | tail -1); if [ -n "$q" ]; then echo "$q"; else df -h "$HOME" | tail -1; fi
 printf "sendmail: "; command -v sendmail || echo なし
 '
 
@@ -40,7 +40,8 @@ for p in / /sample-page/ /dp-check-nonexistent-xyz/ /wp-json/; do
 	printf '%s %s\n' "$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 "$SITE_URL$p")" "$p"
 done
 printf 'ログイン画面の送信先: '
-curl -sS --max-time 15 "$SITE_URL/wp-login.php" | grep -o 'action="[^"]*"' | head -1
+a=$(curl -sS --max-time 15 "$SITE_URL/wp-login.php" | grep -o 'action="[^"]*"' | head -1) || true
+echo "${a:-(取れず。ログイン URL が変えてあるか、転送されている)}"
 printf 'サーバ: '
 curl -sSI --max-time 15 "$SITE_URL/" | grep -i '^server:' | tr -d '\r' || echo '(なし)'
 host="${SITE_URL#https://}"
