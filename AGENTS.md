@@ -12,16 +12,19 @@
 
 文書の地図は `docs/README.md`。
 
-## いまの状態(2026-10-24 時点。最新は design-log が正)
+## いまの状態(2026-10-25 時点。最新は design-log が正)
 
-- **本番はさくらのレンタルサーバ**(`~/www/doujin-profile/`)。**サブドメイン型の Multisite** で、ネットワークは `https://dp.no32.tk/`、各サイトは `https://<名前>.dp.no32.tk/`(spec v0.6)。サイトはメインサイトと `ftsf.dp.no32.tk`(管理者 `ftsf`。中身は初期データだけ)。ユーザは `takano32` と `ftsf`(どちらも特権管理者)。
-- **前段に Caddy**(GCP の e2-micro、米国)。サイトごとの証明書(on-demand TLS + ask)と、さくらへの中継。本当のホスト名と訪問者の IP は合言葉付きのヘッダで渡し、`wp-config.php` の数行で受け取る。手順と戻し方は `docs/caddy-front-trial.md`。
-- ログインまで確認済み。さくらの国外 IP フィルタは、サイト所有者が e2-micro の IP を許可して通した(T.25)。**e2-micro の IP が変わったら、さくら側の許可も直す必要がある。**
-- 旧ホスト `profile.xwp.jp`(Xserver。サブディレクトリ型の Multisite)は 2026-09-18 の状態のまま(spec T.26)。
-- 守りは wordpress.org の配布物のプラグインで: Limit Login Attempts Reloaded(ログイン。2 段階認証は求めない)、Disable Comments(コメント・ピンバック)、Disable XML-RPC。どれもネットワーク有効。
-- コードは `scripts/`、元の巨大画像を消す `mu-plugins/doujin-profile-discard-original-image.php`(さくらに配備済み)、本体 `mu-plugins/doujin-profile/`(骨組みとデータ層。未配備)。JS は `mu-plugins/doujin-profile/` で `npm install` → `npm run build`(node 24.15 以上)、`build/` もコミットする。
+- **中断中(2026-10-25)**: サイト所有者の都合でいったん停止。再開の手順は `docs/design-log.md` の末尾「中断」の節。**いまは `ftsf` からマイページの感想を待っている**(届いたら 1 件ずつ選択式に整理して聞く)。
+- **本番はさくらのレンタルサーバ**(`~/www/doujin-profile/`)。**サブドメイン型の Multisite** で、ネットワークは `https://dp.no32.tk/`、各サイトは `https://<名前>.dp.no32.tk/`(spec v0.8)。サイトはメインサイト(blog_id 1)と `ftsf.dp.no32.tk`(blog_id 4。管理者 `ftsf`。f_tsf の作品 3 件・サンプル 54 枚を投入済み、成人向けの印あり、公開中)。ユーザは `takano32` と `ftsf`(どちらも特権管理者)。一時ユーザ・一時サイトは残っていない。
+- **前段に Caddy**(GCP の e2-micro、米国)。サイトごとの証明書(on-demand TLS + ask)と、さくらへの中継。本当のホスト名と訪問者の IP は合言葉付きのヘッダで渡し、`wp-config.php` の数行で受け取る。手順と戻し方は `docs/caddy-front-trial.md`。さくらの国外 IP フィルタは e2-micro の IP を許可して通している(T.25)。**e2-micro の IP が変わったら、さくら側の許可も直す必要がある。**
+- **DNS**(Value-Domain): `dp.no32.tk` と `*.dp.no32.tk` の A(35.212.198.233)と、`dp.no32.tk` の SPF の TXT。**`*.no32.tk` のワイルドカードがあるので、`dp.no32.tk` に何かレコードを足すと配下がワイルドカードから外れる**(2026-10-25 の障害。design-log)。DNS を案内する前にゾーンの構造を確かめる。
+- **本体 `mu-plugins/doujin-profile/` は配備済み**: データ層、マイページ(作品・サンプルのドラッグ、FANZA/DLsite の作品番号から書影・サンプルを取り込む、リンク集、「公開する」)、公開側のブロック、準備中、年齢確認(成人向けのサイトだけ。検索エンジンには載せる)、head(OGP)、WP-CLI(`wp doujin init-site|import|export|invite|publish|doctor`)。子テーマ `themes/doujin-profile-tt5/` も配備済み(`scripts/deploy.sh --themes`)。元の巨大画像は `mu-plugins/doujin-profile-discard-original-image.php` で消す。
+- JS は `mu-plugins/doujin-profile/` で `npm install` → `npm run build`(node 24.15 以上)、`build/` もコミットする(Actions がビルドし忘れを検査)。`deploy.sh` は `--delete` を使わないので、リポジトリで消したファイルはサーバでも手で消す。
+- **メール**: 配布プラグイン WP Mail SMTP(ネットワーク有効)で、さくらの SMTP に認証して送る。設定は `wp-config.php` の `WPMS_*` 定数で、**パスワードはサイト所有者が入れた。Claude は値を見ない・表示しない**。招待メールが Gmail に届くことを確認済み。
+- 守りは wordpress.org の配布物のプラグインで: Limit Login Attempts Reloaded(ログイン。2 段階認証は求めない)、Disable Comments、Disable XML-RPC。どれもネットワーク有効。
+- 旧ホスト `profile.xwp.jp`(Xserver。サブディレクトリ型の Multisite)は 2026-09-18 の状態のまま(T.26)。
 - ホストの規約は当面の判断材料にしない(当面は公開しない)。
-- 未決: 本番の前段の置き場所(T.24)、元の大きい画像の置き場所(T.51)、かんたん編集画面の中身(T.36)。**裁定は 1 件ずつ選択式で聞く**(ユーザ指示 2026-10-24)。
+- 未決(`TASKS.md` の `[?]`・`[ ]`): 本番の前段の置き場所(T.24)、旧ホスト(T.26)、取り込んだ販売リンクにアフィリエイト ID を付けるか(T.36.6)、外部の埋め込み(T.18)、英語(T.9)、成人向けの印を誰が付けるか(T.21)など。**裁定は 1 件ずつ選択式で聞く**(ユーザ指示 2026-10-24)。作る量が大きく違う選択肢には、行数の目安を書く。
 
 ## 作業の約束(サイト所有者との取り決め)
 
