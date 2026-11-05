@@ -137,7 +137,7 @@ final class CliTest extends IntegrationTestCase {
 
 	/**
 	 * 注意: invite の [--user=<login>] は WP-CLI の全体の引数 --user (動作するユーザ) に取られ、子コマンドには届かない
-	 * (本体の既知の問題。T.54 の結合試験で判明。直すなら別の名前にする)。ここでは新しいユーザの道筋だけを確かめる。
+	 * (本体の既知の問題。T54 の結合試験で判明。直すなら別の名前にする)。ここでは新しいユーザの道筋だけを確かめる。
 	 */
 	public function test_invite_validates_before_creating_anything(): void {
 		$r = self::wp( 'dp invite ab x@example.test --dry-run' );

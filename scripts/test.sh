@@ -1,5 +1,5 @@
 #!/bin/sh
-# 試験の入口 (T.54)。JS は手元 (node)、PHP はターゲット (既定はさくら) の $HOME/doujin-profile-test/ で動かす。
+# 試験の入口 (T54)。JS は手元 (node)、PHP はターゲット (既定はさくら) の $HOME/doujin-profile-test/ で動かす。
 # さくらは本番と同じ PHP・OS・拡張なので、PHP の試験はそこで行う (ユーザ裁定 2026-11-05「docker 使わずにリモートホストでテスト」)。
 #
 #   scripts/test.sh                 すべて: js → php (lint + 単体) → integration

@@ -1,6 +1,6 @@
 <?php
 /**
- * 分類 artist: 作家 (作画担当。タグ型。1 作品に複数可、役割の区別はしない。T.31.1)。一覧ページは /artist/<slug>/ (T.31.3)。
+ * 分類 artist: 作家 (作画担当。タグ型。1 作品に複数可、役割の区別はしない。T31.1)。一覧ページは /artist/<slug>/ (T31.3)。
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -27,12 +27,12 @@ function doujin_profile_register_taxonomy() {
 				'not_found'     => '作家が見つかりません',
 				'menu_name'     => '作家',
 			),
-			'description'       => '作品の作画担当。1 作品に複数可、役割の区別はしない (T.31.1)',
+			'description'       => '作品の作画担当。1 作品に複数可、役割の区別はしない (T31.1)',
 			'public'            => true,
 			'hierarchical'      => false,
 			'show_admin_column' => true,
 			'show_in_rest'      => true,
-			'rewrite'           => array( 'slug' => 'artist' ), // /artist/<slug>/ (T.31.3)。配備後に既存のサイトで一度 wp rewrite flush
+			'rewrite'           => array( 'slug' => 'artist' ), // /artist/<slug>/ (T31.3)。配備後に既存のサイトで一度 wp rewrite flush
 		)
 	);
 }

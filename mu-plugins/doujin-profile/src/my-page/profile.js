@@ -38,7 +38,7 @@ export function ProfileCard() {
 	const icon = useSelect( ( select ) => ( iconId ? select( coreStore ).getMedia( iconId ) : null ), [ iconId ] );
 	const { isLoaded, hasEdits, isSaving, save, notice, clearNotice } = useSiteSave();
 
-	// 準備中 → 公開 (T.11)。true / false 以外 (古い本体で設定が無い) なら何も出さない。
+	// 準備中 → 公開 (T11)。true / false 以外 (古い本体で設定が無い) なら何も出さない。
 	const [ preparing, setPreparing ] = useEntityProp( 'root', 'site', 'doujin_profile_preparing' );
 	const publish = () => {
 		// eslint-disable-next-line no-alert

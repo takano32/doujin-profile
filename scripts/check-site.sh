@@ -1,5 +1,5 @@
 #!/bin/sh
-# 検収の検査 (spec §12。T.32.11)。手元から、curl と scripts/wp.sh で読み取りだけ。何も変えない。
+# 検収の検査 (spec §12。T32.11)。手元から、curl と scripts/wp.sh で読み取りだけ。何も変えない。
 #
 #   scripts/check-site.sh https://ftsf.dp.no32.tk/
 #   DP_TARGET=xserver scripts/check-site.sh https://…/

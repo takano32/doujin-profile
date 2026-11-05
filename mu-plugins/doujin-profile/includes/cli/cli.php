@@ -1,6 +1,6 @@
 <?php
 /**
- * WP-CLI (spec §8.5。T.32.9)。運営者の道具。コア標準のコマンドで足りるものは作らない。
+ * WP-CLI (spec §8.5。T32.9)。運営者の道具。コア標準のコマンドで足りるものは作らない。
  *
  *   wp dp init-site --url=<サイト>                                        新しいサイトの初期設定を、作成済みのサイトに施す (includes/cli/init-site.php)
  *   wp dp import <file.json> --url=<サイト> [--images=<dir>] [--dry-run]  交換形式 (spec §6.4) から入れる (includes/cli/import.php)

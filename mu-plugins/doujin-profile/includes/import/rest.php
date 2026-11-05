@@ -1,6 +1,6 @@
 <?php
 /**
- * 作品番号からの取り込み: 独自 REST の入口 (spec §8.3。T.36.4 の下調べは owner-editor-design.md §9)。
+ * 作品番号からの取り込み: 独自 REST の入口 (spec §8.3。T36.4 の下調べは owner-editor-design.md §9)。
  *
  * マイページで作品番号 (FANZA の cid 例 d_737824、DLsite の例 RJ01634826) を入れてボタンを押すと、
  * サーバが販売サイトから画像を取ってメディアライブラリに保存する (添付の親 = その作品)。
@@ -16,7 +16,7 @@
  * 守り: 権限は upload_files + その投稿の edit_post、nonce は標準の REST Cookie 認証 (X-WP-Nonce)。
  * 取る元は FANZA・DLsite の決まった URL だけ (作品番号は正規表現で検査し、任意の URL は受けない。lib/Import/ProductId.php)。
  *
- * 返すもの: 添付 ID と画像の URL、販売ページへのリンク (素の URL。アフィリエイト ID は付けない — T.36.6 は未決)、
+ * 返すもの: 添付 ID と画像の URL、販売ページへのリンク (素の URL。アフィリエイト ID は付けない — T36.6 は未決)、
  * DLsite なら題名と発売日時。リンク・題名・発売日時・サンプルの並びは画面が投稿の編集として受け取り、持ち主が「保存」で
  * 標準の REST から書く (サーバが勝手に投稿の中身まで書き換えない。アイキャッチだけはここで設定する)。
  * 作品情報の取り方は includes/import/sources.php、メディアへの保存は includes/import/media.php。

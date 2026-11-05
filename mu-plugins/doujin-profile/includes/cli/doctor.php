@@ -86,7 +86,7 @@ final class Doctor {
 	 */
 	private function doctor_plugin() {
 		$this->check( is_file( WPMU_PLUGIN_DIR . '/doujin-profile.php' ), 'ローダ mu-plugins/doujin-profile.php がある', 'scripts/deploy.sh --go' );
-		$this->check( is_file( WPMU_PLUGIN_DIR . '/doujin-profile-discard-original-image.php' ), '元の巨大画像を消す mu-plugin がある (T.51.5)', 'scripts/deploy.sh --go' );
+		$this->check( is_file( WPMU_PLUGIN_DIR . '/doujin-profile-discard-original-image.php' ), '元の巨大画像を消す mu-plugin がある (T51.5)', 'scripts/deploy.sh --go' );
 		$this->check( is_readable( DOUJIN_PROFILE_DIR . '/build/my-page.asset.php' ) && is_readable( DOUJIN_PROFILE_DIR . '/build/my-page.js' ), 'マイページのビルド build/my-page.js がある', 'npm run build → コミット → scripts/deploy.sh --go' );
 		foreach ( array( 'work-card', 'links', 'more-works' ) as $block ) {
 			$dir = DOUJIN_PROFILE_DIR . "/build/blocks/{$block}";

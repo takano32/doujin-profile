@@ -3,7 +3,7 @@
  * 独自ブロックの render.php (build/blocks/∗/render.php) が共用する描き方 (spec §6.2)。
  *
  * 見た目はテーマに任せる: ボタンはコアのボタンブロックのクラス (wp-block-button__link wp-element-button) を
- * 借りて、テーマの theme.json のボタンの装いを継ぐ。色・大きさ・余白の独自の指定はしない (T.32.3.3.2)。
+ * 借りて、テーマの theme.json のボタンの装いを継ぐ。色・大きさ・余白の独自の指定はしない (T32.3.3.2)。
  * 表示名と rel の決まりは lib/Blocks/LinkLabel.php、発売日の表記は lib/Data/ReleaseLabel.php。
  */
 

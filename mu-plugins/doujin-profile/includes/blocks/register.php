@@ -1,6 +1,6 @@
 <?php
 /**
- * 公開側の独自ブロックの登録 (spec §6.2。T.32.3)。
+ * 公開側の独自ブロックの登録 (spec §6.2。T32.3)。
  *
  * ブロックは属性にデータを持たず、投稿の項目・メタ・分類・サイト設定を読んで描くだけ (動的ブロック)。
  * 定義は src/blocks/<名前>/block.json で、@wordpress/scripts が build/blocks/<名前>/ に
@@ -8,7 +8,7 @@
  *
  *   doujin-profile/work-card   作品カード (サンプルビューアを含む)
  *   doujin-profile/links       リンクボタン (サイト設定 doujin_profile_links の shops / accounts)
- *   doujin-profile/more-works  さらに作品を見る (クエリーループの次のページを下へ継ぎ足す。T.31.4)
+ *   doujin-profile/more-works  さらに作品を見る (クエリーループの次のページを下へ継ぎ足す。T31.4)
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

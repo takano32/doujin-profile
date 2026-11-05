@@ -87,7 +87,7 @@ check "$(wp eval 'exit( defined( "DOUJIN_PROFILE_VERSION" ) && function_exists( 
 
 # 6. プロフィールのサイト ftsf.dp.test (wp dp invite。新しいユーザ ftsf を作り、init-site と「準備中」が走る。メールは pre_wp_mail で止まる) と、
 #    ユーザ owner (ftsf の administrator。特権管理者ではない) と reader (購読者)。
-#    注意: invite の [--user=<login>] は WP-CLI の全体の引数 --user (動作するユーザ) に取られて子コマンドに届かない (本体の既知の問題。T.54 で判明)
+#    注意: invite の [--user=<login>] は WP-CLI の全体の引数 --user (動作するユーザ) に取られて子コマンドに届かない (本体の既知の問題。T54 で判明)
 wp dp invite ftsf ftsf@dp.test --title="試験サークル" --mature --path="$WP" | tee "$ROOT/invite.log"
 check "$(grep -q 'ユーザ ftsf (ID' "$ROOT/invite.log" && grep -q 'を準備中で作りました。持ち主 ftsf' "$ROOT/invite.log"; echo $?)" "invite がユーザとサイトを作った"
 check "$([ "$(site option get doujin_profile_preparing)" = 1 ]; echo $?)" "invite で作ったサイトは準備中で始まる"

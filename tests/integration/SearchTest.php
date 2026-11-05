@@ -5,7 +5,7 @@ namespace DoujinProfile\Tests\Integration;
 use WP_Query;
 
 /**
- * サイト内検索で作家名でも当たること (spec §6.0。T.31.2)。
+ * サイト内検索で作家名でも当たること (spec §6.0。T31.2)。
  */
 final class SearchTest extends IntegrationTestCase {
 

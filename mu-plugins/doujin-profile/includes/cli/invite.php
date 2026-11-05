@@ -4,7 +4,7 @@
  *
  * コアの検証 (wpmu_validate_user_signup / wpmu_validate_blog_signup) と作成 (wpmu_create_user / wpmu_create_blog) に乗る。
  * wpmu_create_blog → wp_initialize_site で includes/init-site.php の初期設定が自動で走るので、ここでは呼ばない (二重にしない)。
- * メールはコアの wp_new_user_notification() (パスワード設定のリンク。文面の作り込みは T.33)。
+ * メールはコアの wp_new_user_notification() (パスワード設定のリンク。文面の作り込みは T33)。
  */
 
 namespace DoujinProfile\Commands;
@@ -40,7 +40,7 @@ final class Invite {
 	 * : サークル名 (サイトのタイトル)。省くと名前。
 	 *
 	 * [--mature]
-	 * : 成人向けの印を付ける (年齢確認と rating=adult が出る。T.21)。
+	 * : 成人向けの印を付ける (年齢確認と rating=adult が出る。T21)。
 	 *
 	 * [--user=<login>]
 	 * : 既存のユーザを持ち主にする。

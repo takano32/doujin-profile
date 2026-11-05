@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: doujin-profile: 元の巨大画像を破棄する
- * Description: WordPress 本体が長辺 2560px の -scaled 版(または -rotated 版)を作ったあと、表示に使われない元の画像ファイルを消し、メタデータの original_image を外す(T.51.5)。
+ * Description: WordPress 本体が長辺 2560px の -scaled 版(または -rotated 版)を作ったあと、表示に使われない元の画像ファイルを消し、メタデータの original_image を外す(T51.5)。
  * Version:     1.0.0
  * Requires PHP: 8.0
  *
