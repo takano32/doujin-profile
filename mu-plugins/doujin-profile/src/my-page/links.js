@@ -1,13 +1,14 @@
 /**
  * リンク集: サイト設定 doujin_profile_links の shops[] (販売ページ) と accounts[] (お知らせ・活動情報)。
- * 保存は標準の wp/v2/settings (登録と検査は includes/data.php)。
+ * 保存は標準の wp/v2/settings (登録と検査は includes/data/settings.php)。
  */
 
 import { useEntityProp } from '@wordpress/core-data';
 import { Button, Card, CardBody, CardHeader, Spinner } from '@wordpress/components';
 
 import { StatusNotice } from './util';
-import { LinkList, cleanLinks, findBadLink } from './link-list';
+import { cleanLinks, findBadLink } from './lib/links';
+import { LinkList } from './link-list';
 import { useSiteSave } from './site';
 
 const LISTS = [

@@ -10,7 +10,8 @@ import { store as coreStore } from '@wordpress/core-data';
 import { FormTokenField } from '@wordpress/components';
 import { decodeEntities } from '@wordpress/html-entities';
 
-import { StatusNotice, errorText, useNotice } from './util';
+import { StatusNotice, useNotice } from './util';
+import { errorText } from './lib/errors';
 
 // 候補は 100 件まで (REST の上限)。それ以上の作家がいるサークルは想定しない。
 const TERMS_QUERY = { per_page: 100, orderby: 'name', order: 'asc', context: 'view' };

@@ -2,8 +2,9 @@
  * 作品の編集 (spec §8.2)。
  *
  * 投稿の標準の項目 (title・excerpt・featured_media・status・artist) とメタ (doujin_*) を core-data で編集し、
- * 保存は標準の wp/v2/posts 1 回 (検査は includes/data.php の登録に任せる)。
+ * 保存は標準の wp/v2/posts 1 回 (検査は includes/data/ の登録に任せる)。
  * 公開日時は保存時にサーバのルールで決まる (発売日時と今の早いほう)。
+ * 取り込みの結果の受け方 (lib/import.js)・サンプルの足し方 (lib/list.js)・リンクの検査 (lib/links.js) は純粋なロジック。
  */
 
 import { useSelect, useDispatch, useRegistry } from '@wordpress/data';
@@ -21,13 +22,18 @@ import {
 	ToggleControl,
 } from '@wordpress/components';
 
-import { data, StatusNotice, WORK_CARD_BLOCK, errorText, useNotice } from './util';
+import { data, StatusNotice, WORK_CARD_BLOCK, useNotice } from './util';
+import { errorText } from './lib/errors';
+import { appendUnique } from './lib/list';
+import { cleanLinks, findBadLink } from './lib/links';
+import { coverEdits } from './lib/import';
+import { releaseInput } from './lib/release';
+import { workStatus } from './lib/status';
 import { ArtistField } from './artists';
 import { ImportField } from './import';
 import { CoverField } from './cover';
 import { SamplesField } from './samples';
-import { LinkList, cleanLinks, findBadLink } from './link-list';
-import { workStatus } from './works';
+import { LinkList } from './link-list';
 
 /**
  * @param {Object}   props
@@ -119,33 +125,14 @@ export function WorkEditor( { id, onBack } ) {
 	};
 
 	// 書影の取り込みの結果 (import.js)。アイキャッチはサーバが設定済み。リンク・題名・発売日時は編集として受け、「保存」で書く。
-	const onImported = ( result ) => {
-		const edits = { featured_media: result.featured_media, meta: {} };
-		const links = Array.isArray( meta.doujin_shop_links ) ? meta.doujin_shop_links : [];
-		if ( result.shop_link && ! links.some( ( link ) => link.url === result.shop_link.url ) ) {
-			edits.meta.doujin_shop_links = [ ...links, result.shop_link ];
-		}
-		if ( result.release_at && ! meta.doujin_release_at ) {
-			edits.meta.doujin_release_at = result.release_at;
-		}
-		if ( result.title && ! String( work.title || '' ).trim() ) {
-			edits.title = result.title;
-		}
-		edit( edits );
-	};
+	const onImported = ( result ) => edit( coverEdits( work, result ) );
 
 	// サンプルの取り込み (import.js)。1 枚ずつ続けて届くので、閉じ込めた meta ではなくストアの今の並びに足す。
 	// まだ入っていない ID だけを末尾に足し、足したあとの枚数を返す (上限の判定は呼ぶ側)。
 	const appendSamples = ( newIds ) => {
 		const current = registry.select( coreStore ).getEditedEntityRecord( 'postType', 'post', id );
 		const list = current && current.meta && Array.isArray( current.meta.doujin_sample_ids ) ? current.meta.doujin_sample_ids : [];
-		const max = data.maxSamples || 80;
-		const next = [ ...list ];
-		newIds.forEach( ( sampleId ) => {
-			if ( sampleId > 0 && ! next.includes( sampleId ) && next.length < max ) {
-				next.push( sampleId );
-			}
-		} );
+		const { list: next } = appendUnique( list, newIds, data.maxSamples || 80 );
 		if ( next.length !== list.length ) {
 			setMeta( 'doujin_sample_ids', next );
 		}
@@ -196,7 +183,7 @@ export function WorkEditor( { id, onBack } ) {
 						label="発売日時"
 						type="datetime-local"
 						help="未来の日時のまま公開すると「予告」の印が付きます。並びはこの日時 (と今の早いほう) で決まります。"
-						value={ String( meta.doujin_release_at || '' ).slice( 0, 16 ) }
+						value={ releaseInput( meta.doujin_release_at ) }
 						onChange={ ( value ) => setMeta( 'doujin_release_at', value ) }
 						disabled={ locked }
 					/>

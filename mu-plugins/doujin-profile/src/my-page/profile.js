@@ -22,7 +22,7 @@ import {
 } from '@wordpress/components';
 
 import { data, StatusNotice } from './util';
-import { thumbnailUrl } from './media';
+import { thumbnailUrl } from './lib/media';
 import { useSiteSave } from './site';
 
 export function ProfileCard() {

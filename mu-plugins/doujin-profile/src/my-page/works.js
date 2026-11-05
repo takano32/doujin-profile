@@ -4,6 +4,7 @@
  * 作品 = 投稿 (spec §6.0)。一覧は標準の wp/v2/posts (context=edit で下書きも)。
  * 「作品を追加」はその場で下書きの投稿を作ってから編集に入る (画像を上げるのに投稿 ID が要るため)。
  * REST は 1 回 100 件までなので、それを超えたら「さらに表示」で次の 100 件を下へ継ぎ足す (ページごとに標準の問い合わせ)。
+ * 状態の印とタイトルの文は lib/status.js。
  */
 
 import { useState } from '@wordpress/element';
@@ -12,8 +13,11 @@ import { store as coreStore } from '@wordpress/core-data';
 import { Button, Card, CardBody, CardHeader, Spinner } from '@wordpress/components';
 import { decodeEntities } from '@wordpress/html-entities';
 
-import { StatusNotice, WORK_CARD_BLOCK, errorText, useNotice } from './util';
-import { thumbnailUrl, useAttachments } from './media';
+import { StatusNotice, WORK_CARD_BLOCK, useNotice } from './util';
+import { errorText } from './lib/errors';
+import { workStatus, workTitle } from './lib/status';
+import { thumbnailUrl } from './lib/media';
+import { useAttachments } from './media';
 
 // 1 ページ 100 件 (REST の上限)。
 export const WORKS_QUERY = {
@@ -24,42 +28,6 @@ export const WORKS_QUERY = {
 };
 
 const EMPTY = []; // 読み込み中の「まだ無い」。毎回 [] を作ると useSelect が変化と見るため。
-
-/**
- * 作品の状態の印。予告は「公開 + 発売日時が未来」から導く (別の状態は持たない。spec §6.0)。
- *
- * @param {Object} work 投稿 (保存済みでも編集中でも)。
- * @return {{ key: string, label: string }}
- */
-export function workStatus( work ) {
-	const status = work && work.status;
-	if ( 'publish' === status ) {
-		const releaseAt = work.meta && work.meta.doujin_release_at;
-		if ( releaseAt && new Date( releaseAt ) > new Date() ) {
-			return { key: 'upcoming', label: '予告' };
-		}
-		return { key: 'publish', label: '公開' };
-	}
-	if ( 'future' === status ) {
-		return { key: 'future', label: '予約' }; // 保存のルールで publish になるはずだが、念のため。
-	}
-	if ( 'private' === status ) {
-		return { key: 'private', label: '非公開' };
-	}
-	return { key: 'draft', label: '下書き' };
-}
-
-/**
- * 一覧のタイトル (REST の一覧は title が { raw, rendered })。
- *
- * @param {Object} work 投稿。
- * @return {string}
- */
-export function workTitle( work ) {
-	const title = work && work.title;
-	const text = typeof title === 'string' ? title : ( title && ( title.raw || decodeEntities( title.rendered ) ) ) || '';
-	return text.trim() || '(タイトルなし)';
-}
 
 /**
  * 一覧の 1 ページ分 (100 件) の行。
@@ -95,7 +63,7 @@ function WorksPage( { page, onSelect } ) {
 						{ cover ? <img src={ cover } alt="" loading="lazy" /> : <span className="doujin-profile-work-nocover">書影なし</span> }
 					</span>
 					<span className="doujin-profile-work-text">
-						<span className="doujin-profile-work-title">{ workTitle( work ) }</span>
+						<span className="doujin-profile-work-title">{ workTitle( work, decodeEntities ) }</span>
 						{ work.meta && work.meta.doujin_release_label && (
 							<span className="description">{ work.meta.doujin_release_label }</span>
 						) }

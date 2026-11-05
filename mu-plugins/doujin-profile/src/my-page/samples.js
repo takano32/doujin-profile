@@ -3,15 +3,17 @@
  *
  * まとめてドロップ / ファイルを選ぶ (複数選択) / メディアから選ぶ / 作品番号から取り込む (import.js)。初期の並びはファイル名の自然順。
  * ドラッグで並べ替え (SortableJS)、← → ボタンも。1 枚ずつ外す (画像はメディアに残る)。
- * 上げた画像の親は作品 (アップロード時に post を付ける。モーダルで上げた分はあとから付ける)。
+ * 上げた画像の親は作品 (アップロード時に post を付ける。モーダルで上げた分はあとから付ける)。並びの操作は lib/list.js。
  */
 
 import { useRef, useState } from '@wordpress/element';
 import { MediaUpload } from '@wordpress/media-utils';
 import { BaseControl, Button, DropZone, Spinner } from '@wordpress/components';
 
-import { data, move, StatusNotice, useNotice } from './util';
-import { adoptAttachment, sortByFileName, thumbnailUrl, uploadImages, useAttachments } from './media';
+import { data, StatusNotice, useNotice } from './util';
+import { appendUnique, move } from './lib/list';
+import { sortByFileName, thumbnailUrl } from './lib/media';
+import { adoptAttachment, uploadImages, useAttachments } from './media';
 import { useSortable } from './sortable';
 
 /**
@@ -33,16 +35,11 @@ export function SamplesField( { workId, ids, onChange, disabled } ) {
 
 	// 重複を除いて末尾に足す。上限を超える分は捨てて知らせる。
 	const append = ( newIds ) => {
-		const next = [ ...list ];
-		newIds.forEach( ( id ) => {
-			if ( id > 0 && ! next.includes( id ) ) {
-				next.push( id );
-			}
-		} );
-		if ( next.length > max ) {
+		const { list: next, overflow } = appendUnique( list, newIds, max );
+		if ( overflow ) {
 			setNotice( { status: 'warning', text: `サンプル画像は ${ max } 枚までです。超えた分は入れていません。` } );
 		}
-		onChange( next.slice( 0, max ) );
+		onChange( next );
 	};
 
 	const upload = async ( files ) => {

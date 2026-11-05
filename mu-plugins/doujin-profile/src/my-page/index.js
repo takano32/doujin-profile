@@ -3,7 +3,7 @@
  *
  * WordPress 同梱の部品 (wp.components・wp.coreData・wp.data・wp.apiFetch・wp.mediaUtils) で描き、
  * 保存はすべて標準の REST (wp/v2/settings・wp/v2/posts・wp/v2/media・wp/v2/artist)。
- * 例外は書影・サンプルの取り込み (import.js → includes/cover-import.php) だけ。
+ * 例外は書影・サンプルの取り込み (import.js → includes/import/rest.php) だけ。
  * 外部の JS は、ドラッグで並べ替える SortableJS だけを npm で同梱する (sortable.js)。
  *
  * WordPress 同梱の部品は externals (wp.*) なので、ビルド物には含まれない。
@@ -14,7 +14,10 @@
  *   import.js       作品番号から取り込む (書影・サンプル)   cover.js      書影 (ドロップ・選ぶ)
  *   samples.js      サンプル画像 (まとめて上げる・並べ替え)  artists.js    作家 (候補つき・新規)
  *   media.js        アップロードと添付の読み出し           sortable.js   SortableJS の React 用の薄い包み
- *   site.js         サイト設定の保存 (共用)                 util.js       小物
+ *   site.js         サイト設定の保存 (共用)                 util.js       React の小物と PHP 側から渡される情報
+ *   lib/            WordPress を読まない純粋なロジック (vitest で試験。npm test):
+ *                   list.js (並び)・links.js (リンクの決まり)・status.js (状態の印とタイトル)・release.js (発売日時の入力)・
+ *                   errors.js (REST のエラーの文)・media.js (添付の読み方)・upload.js (まとめて上げる流れ)・import.js (取り込みの受け方)
  */
 
 import { createRoot, useState } from '@wordpress/element';
@@ -40,7 +43,7 @@ function MyPage() {
 
 	return (
 		<div className="doujin-profile-my-page">
-			{ /* 見出し「マイページ」は PHP 側 (includes/my-page.php) の h1。管理画面の通知はその直後に差し込まれる。 */ }
+			{ /* 見出し「マイページ」は PHP 側 (includes/my-page/menu.php) の h1。管理画面の通知はその直後に差し込まれる。 */ }
 			<TabPanel className="doujin-profile-tabs" tabs={ TABS } initialTabName="profile">
 				{ ( tab ) => {
 					if ( 'links' === tab.name ) {

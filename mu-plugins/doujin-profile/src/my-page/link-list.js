@@ -1,41 +1,16 @@
 /**
  * リンクの一覧の編集 (サイトのリンク集 shops / accounts と、作品の販売先リンクで共用)。
  *
- * 1 件はサービス種別・URL (https: のみ)・表示名・アフィリエイトの有無 (includes/data.php の doujin_profile_link_schema())。
- * 足す・消す・並べ替え (つまみをドラッグ、← → ボタン)。保存は呼ぶ側 (標準の REST)。
+ * 1 件はサービス種別・URL (https: のみ)・表示名・アフィリエイトの有無 (includes/data/ の doujin_profile_link_schema())。
+ * 足す・消す・並べ替え (つまみをドラッグ、← → ボタン)。保存は呼ぶ側 (標準の REST)。行の決まりは lib/links.js。
  */
 
 import { Button, SelectControl, TextControl, ToggleControl } from '@wordpress/components';
 
-import { data, move } from './util';
+import { data } from './util';
+import { move } from './lib/list';
+import { EMPTY_LINK } from './lib/links';
 import { useSortable } from './sortable';
-
-const EMPTY_LINK = { service: 'other', url: '', label: '', sponsored: false };
-
-/**
- * 保存の前に、URL が空の行を落とす (足しただけの行)。
- *
- * @param {Array} links リンク。
- * @return {Array}
- */
-export function cleanLinks( links ) {
-	return ( links || [] ).filter( ( link ) => link && String( link.url || '' ).trim() !== '' );
-}
-
-/**
- * 保存できない行があれば、その説明を返す (REST のスキーマが https: 以外を弾くため、先に知らせる)。
- *
- * @param {Array}  links リンク。
- * @param {string} where どの一覧か (文に入れる)。
- * @return {string|null}
- */
-export function findBadLink( links, where ) {
-	const bad = cleanLinks( links ).find( ( link ) => ! /^https:\/\/\S+$/.test( String( link.url ).trim() ) );
-	if ( ! bad ) {
-		return null;
-	}
-	return `${ where }の URL は https:// から始まるように入れてください (${ bad.url })。`;
-}
 
 /**
  * リンクの一覧。

@@ -1,9 +1,10 @@
 /**
  * 作品番号からの取り込み (spec §8.3)。書影とサンプル画像。
  *
- * 独自の REST (includes/cover-import.php) を呼ぶ唯一の所。書影はサーバがメディアに保存してアイキャッチにし、
+ * 独自の REST (includes/import/rest.php) を呼ぶ唯一の所。書影はサーバがメディアに保存してアイキャッチにし、
  * 販売ページのリンク・題名・発売日時を返す。サンプルはまず枚数を聞き、1 枚ずつ取る (さくらの実行時間の上限に収めるため)。
  * どちらも、投稿に書く分 (リンク・題名・発売日時・サンプルの並び) は親が未保存の編集として受け、持ち主が「保存」で書く。
+ * 応答の読み方と知らせの文は lib/import.js。
  */
 
 import { useRef, useState } from '@wordpress/element';
@@ -11,7 +12,9 @@ import apiFetch from '@wordpress/api-fetch';
 import { addQueryArgs } from '@wordpress/url';
 import { Button, TextControl } from '@wordpress/components';
 
-import { data, StatusNotice, errorText, useNotice } from './util';
+import { data, StatusNotice, useNotice } from './util';
+import { errorText } from './lib/errors';
+import { importPath, importedIds, samplesNotice } from './lib/import';
 
 /**
  * @param {Object}   props
@@ -37,7 +40,7 @@ export function ImportField( { workId, title, onCover, onSamples, disabled } ) {
 		setNotice( null );
 		try {
 			const result = await apiFetch( {
-				path: ( data.coverImportPath || '/doujin-profile/v1/works/%d/cover' ).replace( '%d', String( workId ) ),
+				path: importPath( data.coverImportPath || '/doujin-profile/v1/works/%d/cover', workId ),
 				method: 'POST',
 				data: common,
 			} );
@@ -50,7 +53,7 @@ export function ImportField( { workId, title, onCover, onSamples, disabled } ) {
 	};
 
 	const importSamples = async () => {
-		const path = ( data.sampleImportPath || '/doujin-profile/v1/works/%d/samples' ).replace( '%d', String( workId ) );
+		const path = importPath( data.sampleImportPath || '/doujin-profile/v1/works/%d/samples', workId );
 		setBusy( 'samples' );
 		setNotice( null );
 		cancelled.current = false;
@@ -64,7 +67,7 @@ export function ImportField( { workId, title, onCover, onSamples, disabled } ) {
 				setNotice( { status: 'warning', text: 'この作品のサンプル画像は見つかりませんでした。' } );
 			}
 			// 取り込み済みの分はそのまま並びに足し、残りを 1 枚ずつ取る。
-			let count = onSamples( samples.filter( ( sample ) => sample.attachment_id > 0 ).map( ( sample ) => sample.attachment_id ) );
+			let count = onSamples( importedIds( samples ) );
 			let full = false;
 			for ( const sample of samples ) {
 				if ( cancelled.current ) {
@@ -81,15 +84,9 @@ export function ImportField( { workId, title, onCover, onSamples, disabled } ) {
 				done += 1;
 				setProgress( { done, total } );
 			}
-			if ( total ) {
-				const tail = '並びを確かめて「保存」を押してください。';
-				if ( full ) {
-					setNotice( { status: 'warning', text: `サンプル画像は ${ max } 枚までなので、${ done } / ${ total } 枚で止めました。${ tail }` } );
-				} else if ( done < total ) {
-					setNotice( { status: 'warning', text: `${ done } / ${ total } 枚で中止しました。取り込めた分は並びに入っています。${ tail }` } );
-				} else {
-					setNotice( { status: 'success', text: `サンプル画像を ${ total } 枚取り込みました。${ tail }` } );
-				}
+			const summary = samplesNotice( { done, total, full, max } );
+			if ( summary ) {
+				setNotice( summary );
 			}
 		} catch ( error ) {
 			const partial = done ? ` (${ done } / ${ total } 枚までは取り込めています)` : '';

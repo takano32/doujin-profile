@@ -9,7 +9,8 @@ import { MediaUpload } from '@wordpress/media-utils';
 import { BaseControl, Button, DropZone, Spinner } from '@wordpress/components';
 
 import { StatusNotice, useNotice } from './util';
-import { adoptAttachment, thumbnailUrl, uploadImages } from './media';
+import { thumbnailUrl } from './lib/media';
+import { adoptAttachment, uploadImages } from './media';
 
 /**
  * @param {Object}   props

@@ -8,12 +8,13 @@
  *   - 「予告」の印: 現在時刻で見直す (サーバのキャッシュに備える。spec §9.5)。
  *
  * イベントは document で受ける (「さらに作品を見る」で継ぎ足したカードにもそのまま効く)。
+ * ページの数え方・めくる向き・印の判定は logic.js (DOM に触らない。vitest で試験)。
  */
 
-const SWIPE_PX = 40;
+import { clampIndex, countText, isSpread, keyAction, pointerDirection, stepSize, upcomingHidden, visibleRange } from './logic';
 
-/* 見開きにするか: 横長で、ある程度の幅があるとき。 */
-const isSpread = () => window.innerWidth >= 768 && window.innerWidth > window.innerHeight;
+/* 見開きにするか: いまの画面で。 */
+const spreadNow = () => isSpread( window.innerWidth, window.innerHeight );
 
 const viewers = new WeakMap();
 
@@ -43,15 +44,12 @@ function getViewer( dialog ) {
 
 		/* 表示を描き直す。index は見開きなら偶数にそろえる。 */
 		render() {
-			const spread = isSpread() && pages.length > 1;
-			if ( spread ) {
-				this.index -= this.index % 2;
-			}
-			const last = spread ? Math.min( this.index + 1, pages.length - 1 ) : this.index;
+			const { first, last, spread } = visibleRange( this.index, pages.length, spreadNow() );
+			this.index = first;
 
 			stage.classList.toggle( 'is-spread', spread );
 			stage.replaceChildren();
-			for ( let i = this.index; i <= last; i++ ) {
+			for ( let i = first; i <= last; i++ ) {
 				const img = document.createElement( 'img' );
 				img.src = pages[ i ].src;
 				if ( pages[ i ].srcset ) {
@@ -63,18 +61,17 @@ function getViewer( dialog ) {
 				stage.append( img );
 			}
 
-			range.value = String( this.index + 1 );
-			count.value = ( last > this.index ? `${ this.index + 1 }-${ last + 1 }` : `${ this.index + 1 }` ) + ` / ${ pages.length }`;
+			range.value = String( first + 1 );
+			count.value = countText( first, last, pages.length );
 		},
 
 		go( index ) {
-			this.index = Math.max( 0, Math.min( pages.length - 1, index ) );
+			this.index = clampIndex( index, pages.length );
 			this.render();
 		},
 
 		step( direction ) {
-			const by = isSpread() && pages.length > 1 ? 2 : 1;
-			this.go( this.index + direction * by );
+			this.go( this.index + direction * stepSize( spreadNow(), pages.length ) );
 		},
 
 		open() {
@@ -101,11 +98,12 @@ function getViewer( dialog ) {
 
 	/* 右から左なので、← が次、→ が前。 */
 	dialog.addEventListener( 'keydown', ( event ) => {
-		const keys = { ArrowLeft: () => viewer.step( 1 ), ArrowRight: () => viewer.step( -1 ), Home: () => viewer.go( 0 ), End: () => viewer.go( pages.length - 1 ) };
-		if ( keys[ event.key ] ) {
-			event.preventDefault();
-			keys[ event.key ]();
+		const action = keyAction( event.key );
+		if ( ! action ) {
+			return;
 		}
+		event.preventDefault();
+		( { next: () => viewer.step( 1 ), prev: () => viewer.step( -1 ), first: () => viewer.go( 0 ), last: () => viewer.go( pages.length - 1 ) } )[ action ]();
 	} );
 	dialog.addEventListener( 'close', () => {
 		if ( document.fullscreenElement === dialog ) {
@@ -126,12 +124,8 @@ function getViewer( dialog ) {
 		}
 		const dx = event.clientX - pointerStartX;
 		pointerStartX = null;
-		if ( Math.abs( dx ) >= SWIPE_PX ) {
-			viewer.step( dx > 0 ? 1 : -1 );
-		} else {
-			const rect = stage.getBoundingClientRect();
-			viewer.step( event.clientX < rect.left + rect.width / 2 ? 1 : -1 );
-		}
+		const rect = stage.getBoundingClientRect();
+		viewer.step( pointerDirection( dx, event.clientX, rect.left, rect.width ) );
 	} );
 	stage.addEventListener( 'pointercancel', () => {
 		pointerStartX = null;
@@ -171,10 +165,10 @@ async function share( button ) {
 /* 「予告」の印を現在時刻で見直す (発売日時を過ぎた HTML がキャッシュから出ても印が残らないように)。 */
 function refreshUpcoming( root ) {
 	root.querySelectorAll( '.doujin-profile-work-card[data-release-at]' ).forEach( ( card ) => {
-		const at = Date.parse( card.dataset.releaseAt );
+		const hidden = upcomingHidden( card.dataset.releaseAt, Date.now() );
 		const badge = card.querySelector( '.doujin-profile-work-card__upcoming' );
-		if ( badge && ! Number.isNaN( at ) ) {
-			badge.hidden = at <= Date.now();
+		if ( badge && hidden !== null ) {
+			badge.hidden = hidden;
 		}
 	} );
 }

@@ -7,7 +7,8 @@
 import { useSelect, useDispatch, useRegistry } from '@wordpress/data';
 import { store as coreStore } from '@wordpress/core-data';
 
-import { errorText, useNotice } from './util';
+import { useNotice } from './util';
+import { errorText } from './lib/errors';
 
 /**
  * @param {Function} [beforeSave] 保存の前の検査。エラーの文を返すと保存しない。
