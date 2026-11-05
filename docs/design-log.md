@@ -1596,3 +1596,14 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 5. 問題なければ `doujin-profile.old/` を消す。
 
 戻し方: `mv doujin-profile doujin-profile.bad && mv doujin-profile.old doujin-profile`(`.old` を消したあとは退避の tgz を展開)。
+
+### T.54.5 配備の結果
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-11-05 | ユーザ裁定 | 「作り直した本体を本番に置きますか？」に「いま置いて確かめる」(最初の入れ替えは Claude Code の自動の許可判定で止められ、確認してから実行した) |
+
+- 退避 → `.new` に複製して rsync → 手元と `--delete` の dry-run で差が無いこと → 旧 5 ファイルを消す → 入れ替え。直後にトップ・作品ページ・ログイン画面が 200、`wp dp doctor` NG 0(ネットワーク・ftsf)、`scripts/check-site.sh https://ftsf.dp.no32.tk/` NG 0。
+- **障害(Claude の判断の誤り、数秒)**: 公開側の HTML を新旧で比べようとして、本番で旧版に入れ替え直した。その直後に取った ftsf のトップと作品ページが WordPress の「エラー」のページだった。すぐ新版に戻し、3 回続けて 200 で正しい中身を確認。原因の見立て: opcache(`validate_timestamps=1`・`revalidate_freq=2`。CLI の値)がファイルを見直すまでの間、キャッシュの新しいファイルとディスクの古いファイルが混ざった。**本番で版を行き来させて比べることはしない**(比べるなら結合試験の環境で)。HTML の新旧の比較はやめ、表示は結合試験(ブロックの描画)で確かめた分とした。
+- マイページ: 一時ユーザ dptestrefac(ftsf の administrator)でプロフィール・リンク集(7 件)・作品(3 件)・作品の編集(題・書影・発売日時・販売先 2・サンプル 28 枚・取り込みのボタン)が出る。コンソールは `getMedia` の非推奨の警告だけ(リファクタリング前から。T.54.7)。一時ユーザは消した。`doujin-profile.old/` も消した(退避の tgz は残す)。ユーザは takano32・ftsf、サイトは 1・4 のまま。
+- さくらの `~/doujin-profile-test/`(約 159MB。使い捨ての WordPress と試験の道具)は、`scripts/test.sh` が使うので残す。

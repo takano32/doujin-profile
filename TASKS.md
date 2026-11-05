@@ -131,7 +131,9 @@ doujin-profile の仕事と、決めることの一覧。**ここが台帳の正
   - [x] **T.54.2** PHP の単体試験(PHPUnit 9.6 の phar。`tests/php`)と `scripts/test.sh`(さくらに同期して `php -l` と PHPUnit)。2026-11-05 さくら(PHP 8.3.36)で通った
   - [x] **T.54.3** JS の分割(`src/my-page/lib/`・`src/blocks/work-card/logic.js`)と単体試験(`wp-scripts test-unit-js` = vitest 5。`npm test`)、`build/` の作り直し。2026-11-05
   - [x] **T.54.4** さくらでの結合試験(本番と同じ版の WordPress を SQLite Database Integration で使い捨てに設置。`tests/integration`・`tests/remote/integration.sh`)。2026-11-05
-  - [ ] **T.54.5** 本番への配備と検収 👤(`scripts/deploy.sh` の dry-run を目で見てから `--go`。リポジトリで消した `includes/{data,cover-import,cli,my-page,blocks}.php` はサーバで手で消す。配備後に `wp dp doctor` と `scripts/check-site.sh`、マイページをブラウザで)
+  - [x] **T.54.5** 本番への配備と検収。2026-11-05「いま置いて確かめる」: 入れ替え式で配備(`doujin-profile.new` に用意して mv)。`wp dp doctor` NG 0(ネットワーク・ftsf)、`scripts/check-site.sh` NG 0、トップ・作品ページ・ログイン画面 200、マイページを一時ユーザで開いて各タブと作品の編集が出る(コンソールは前からある `getMedia` の非推奨の警告だけ)。旧 5 ファイルは旧ディレクトリごと消えた。**確かめの途中で旧版に戻した数秒、ftsf がエラーページになった**(design-log)
+  - [ ] **T.54.6** `wp dp invite` の `--user=<login>` が WP-CLI 全体の `--user` に取られて届かない(前からの不具合)。直すなら `--owner=<login>` など(数行) 👤
+  - [ ] **T.54.7** マイページの `getMedia` を `getEntityRecord( 'postType', 'attachment', … )` に(WP 6.9 からの非推奨。cover.js・profile.js)
 - [~] **T.53** 招待メールが届くようにする。2026-10-25: Gmail が `550-5.7.26`(SPF も DKIM も無い)で断っていた。裁定「さくらに送信用アドレス」。**2026-10-25 届くようになった**(SMTP 認証 + `dp.no32.tk` の SPF)。残りは任意(T.53.1 のドメイン登録、T.53.4 の DKIM)
   - [~] **T.53.1** さくらのコントロールパネルで `dp.no32.tk` を登録し、送信用のアドレスを作る 👤。2026-10-25: メールボックス `noreply` はできた。`dp.no32.tk` の登録は未確認(SMTP 認証は初期ドメインの名前で通している)
   - [x] **T.53.2** WP Mail SMTP(配布物)。2026-10-25 4.10.3 をネットワーク有効化、定数は wp-config.php(パスワードはサイト所有者が入れた)
