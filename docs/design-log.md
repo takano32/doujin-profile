@@ -1584,3 +1584,15 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 
 訂正(2026-11-05、同日): 上の「消したファイル」の節で「残すと同じ関数が二重に定義されて致命的エラーになる」と書いたのは誤り。`includes/` の下のファイルは本体 `doujin-profile.php` の `require_once` でしか読まれず、新しい本体は旧ファイルを読まないので、サーバに残っても読み込まれない(害は無い)。消すのは正本と揃えるため。
 - 2026-11-05 Claude: リファクタリングの枝は `wp dp` への改名(4ffb4bb)より前から分かれていたので、master の上に載せ直し(design-log の追記の衝突は両方を残した)、分けた `includes/cli/`・試験・この節の `wp doujin` を `wp dp` にそろえた。
+
+### T.54.5 配備の手順(実行前に記す)
+
+上書きの rsync だと、送っている途中に新しい `doujin-profile.php` と古い `includes/` が混ざる(名前の順に送るので、新しい入口が `includes/`・`lib/` より先に届く。逆に古い入口が新しい `head.php` などを読むと、オートローダが無くて止まる)。そこで入れ替え式にする:
+
+1. 退避: `~/dumps/pre-doujin-profile-refactor-20261105/mu-plugins.tgz`。
+2. サーバで `wp-content/mu-plugins/doujin-profile/` を `doujin-profile.new/` に複製(`cp -Rp`)し、手元の `mu-plugins/doujin-profile/` をそこへ rsync(deploy.sh と同じ除外)。消えた 5 ファイル(`includes/{data,cover-import,cli,my-page,blocks}.php`)は `.new` から消す。
+3. `mv doujin-profile doujin-profile.old && mv doujin-profile.new doujin-profile`(切り替わりは一瞬)。
+4. 確かめ: `wp dp doctor`(ネットワークと ftsf)、`scripts/check-site.sh`、トップと作品ページが 200、マイページを一時ユーザで開いてコンソールにエラーが無いこと。
+5. 問題なければ `doujin-profile.old/` を消す。
+
+戻し方: `mv doujin-profile doujin-profile.bad && mv doujin-profile.old doujin-profile`(`.old` を消したあとは退避の tgz を展開)。
