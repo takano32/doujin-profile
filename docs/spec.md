@@ -3,7 +3,7 @@
 | 項目 | 値 |
 |---|---|
 | 状態 | **草案**。要件(§1)はユーザ裁定済み。2026-10-24 に導入先をさくらのレンタルサーバへ移し(T.1.1)、**サブドメイン型の Multisite + 前段 Caddy** の仮運用の構成ができた(T.44)。表示・サイト作成・アップロード・証明書・ログインまで確認済み(§13)。持ち主の編集画面は **wp-admin の中の「マイページ」**(§8。T.36) |
-| 作成 / 改訂 | 2026-09-18 / 2026-10-24 |
+| 作成 / 改訂 | 2026-09-18 / 2026-11-05 |
 | 関連文書 | 仕事と未決の台帳 → [`TASKS.md`](../TASKS.md) / 導入先の実測 → [`environment.md`](environment.md) / 経緯と裁定の記録 → [`design-log.md`](design-log.md) / かんたん編集画面(マイページ)の設計案と決定 → [`owner-editor-design.md`](owner-editor-design.md) / Xserver への問い合わせ文案 → [`xserver-inquiry.md`](xserver-inquiry.md) / 前段 Caddy + サブドメイン型の仮運用の手順・結果・戻し方 → [`caddy-front-trial.md`](caddy-front-trial.md) / 旧ホストでの Multisite 化の検証 → [`multisite-trial.md`](multisite-trial.md) / 移転先ホスティングの調査 → [`hosting-research.md`](hosting-research.md) |
 
 表記: 👤 = サイト所有者の判断・作業が要るもの。「実測」= [`environment.md`](environment.md) か設計ログに根拠があるもの。
@@ -618,24 +618,39 @@ SEO 系のプラグインをネットワークに入れる場合は、そちら�
   ├── doujin-profile.php              ← ローダ(直下の *.php しか自動ロードされないため)
   ├── doujin-profile-discard-original-image.php  ← 元の巨大画像を消す(§6.0。配備済み)
   └── doujin-profile/
-      ├── doujin-profile.php          ← 本体
-      ├── includes/                   ← メタ・分類・設定の登録 / サイトの初期設定 / 招待 / 準備中 / 直行 / マイページの登録 / 書影の取り込み / 年齢確認 / head / WP-CLI
+      ├── doujin-profile.php          ← 本体(定数・オートローダ・includes/ の読み込み。先頭に構成の地図)
+      ├── lib/                        ← WordPress を読まない純粋なロジック(名前空間 DoujinProfile\。小さなオートローダ、Composer は使わない。T.54)
+      │   ├── Data/                   ← サービス種別・リンクの正規化・サンプル ID・発売日時(公開日時のルール)・発売日の表記
+      │   ├── Import/                 ← 作品番号・FANZA と DLsite の URL と JSON の解釈・サンプルの URL・画像の応答の判定・添付の題名
+      │   ├── Blocks/ Head/ Login/ Search/ ← リンクボタンの表示名、head の meta、ログイン後の送り先、作家検索の SQL
+      │   ├── Cli/                    ← 交換形式の決まり(§6.4)・メールの伏せ字・点検の記録と判定
+      │   └── Failure.php             ← 失敗の値(糊が WP_Error にする)
+      ├── includes/                   ← WordPress の糊(フック・登録・REST・WP-CLI の入口)。関数名は doujin_profile_*
+      │   ├── data/                   ← 分類 artist・投稿メタ・サイト設定・保存時の 1 ルール・正規化の橋(1 責務 1 ファイル)
+      │   ├── import/                 ← 書影の取り込みの REST の入口・作品情報の取り方(HTTP とトランジェント)・メディアへの保存
+      │   ├── my-page/ blocks/ cli/   ← マイページ(メニュー・スクリプト)、ブロックの登録と描き方、WP-CLI(子コマンドごとに 1 クラス)
+      │   └── search / login-redirect / patterns / init-site / preparing / age-gate / head .php
       ├── src/
-      │   ├── blocks/                 ← 独自ブロックのソース(block.json、描画用 PHP、エディタ用 JS)
-      │   └── my-page/                ← マイページのソース(JS。§8)
+      │   ├── blocks/                 ← 独自ブロックのソース(block.json、描画用 PHP、エディタ用 JS、表示側 JS。計算は logic.js)
+      │   └── my-page/                ← マイページのソース(JS。§8)。WordPress を読まないロジックは my-page/lib/
       ├── build/                      ← 開発機でビルドした成果物(リポジトリに入れる)
-      ├── patterns/
-      ├── package.json                ← `@wordpress/scripts` と SortableJS(バージョン固定)
+      ├── package.json                ← `@wordpress/scripts` と SortableJS、試験用の vitest(バージョン固定)
       └── package-lock.json
   themes/
-  └── tt5-doujin/                     ← TT5 の子テーマ(§9.3。名前は仮)
+  └── doujin-profile-tt5/             ← TT5 の子テーマ(§9.3)
+  tests/
+  ├── php/                            ← lib/ の単体試験(PHPUnit 9.6。WordPress は読まない)
+  ├── integration/                    ← 使い捨ての WordPress(SQLite)での結合試験(フック・REST・WP-CLI・ブロックの描画)
+  └── remote/                         ← さくらの `~/doujin-profile-test/` で動く実行スクリプト(lint・単体・結合)
+  scripts/test.sh                     ← 試験の入口(JS は手元、PHP はさくらで。下記)
   ```
 
-  (ディレクトリの名前は仮。`@wordpress/scripts` の既定に合わせて実装時に確定)
+  JS のソース(`src/`)と試験(`tests/`)は配備しない(`scripts/deploy.sh` は `mu-plugins/` だけを送り、その中でも `src/` と `package*.json` を除く)。`lib/` と `includes/` は配備する。
 
 - **ビルド**(T.36.2。ユーザ裁定 2026-10-24「WordPress 標準の道具で」): `@wordpress/scripts`(`wp-scripts build`)1 本で、独自ブロックとマイページを `src/` → `build/` にビルドする。WordPress 同梱の部品は externals として扱い、配備物に含めない。同梱するのは SortableJS だけ(npm、バージョン固定)。**CDN からは読まない。Astro も使わない**。
   初回(開発機。node 24 以上): `cd mu-plugins/doujin-profile && npm install`。ふだんは `npm run build` → `build/` もコミット → `scripts/deploy.sh`(dry-run)→ `scripts/deploy.sh --go`。サーバに node は要らない。
-- **GitHub Actions は「コミットした `build/` がソースと一致するか」の検査だけ**(ビルドし忘れの検出。秘密情報なし)。Actions から配備はしない(鍵を GitHub に置くことになり、同じアカウントに同居する別サイトまで被害が届きうる)。
+- **試験**(T.54。ユーザ裁定 2026-11-05「docker 使わずにリモートホストでテスト」「テストはなるべくさくらでやりたい / 環境が近い」): `scripts/test.sh` が入口。JS の単体試験(vitest。`npm test`)は手元の node で、PHP はさくらの `~/doujin-profile-test/`(WordPress の設置先の外。本番には触れない)に同期して行う — `php -l`、`lib/` の単体試験(PHPUnit 9.6 の phar。WordPress は読まない)、結合試験(本番と同じ版の WordPress を SQLite Database Integration の drop-in で使い捨てに設置し、本体を入れて PHPUnit。FANZA・DLsite へは行かず `pre_http_request` で代える。メールは送らない)。docker は使わない。
+- **GitHub Actions は「コミットした `build/` がソースと一致するか」の検査**(ビルドし忘れの検出。秘密情報なし)**と、JS の単体試験、PHP 8.0 / 8.3 での構文検査と単体試験**。Actions から配備はしない(鍵を GitHub に置くことになり、同じアカウントに同居する別サイトまで被害が届きうる)。
 - 接続先は `scripts/targets/<名前>.env`(T.28)。既定は `sakura`、旧ホストは `xserver`。`scripts/wp.sh`(WP-CLI)・`scripts/remote.sh`(任意のコマンド)・`scripts/check-multisite.sh`(Multisite にできるかの読み取り調査)が、どのターゲットにも同じに使える。
 - 配備は `scripts/deploy.sh`(rsync。既定は dry-run、`--delete` 禁止)。宛先は WordPress の `wp-content/mu-plugins/`(テーマを足すときは `wp-content/themes/` も)。`node_modules/` と `src/` は送らない(`build/` と PHP だけ)。
 - 前段の Caddy の設定はリポジトリでは管理せず、手順書([`caddy-front-trial.md`](caddy-front-trial.md))に中身と戻し方を書く。サーバ上の名前には `doujin-profile` を入れる。
@@ -867,3 +882,4 @@ v0.2 の全文は git 履歴(コミット `8d0386a`)、v0.3 の全文はコミ�
 | v0.7.2 | 2026-10-24 | 堅牢化のコメント・XML-RPC は配布物のプラグイン(Disable Comments・Disable XML-RPC)に。自作の `profile-site-hardening.php` をやめた(§10.3。T.52)。マンガはサンプルまで(T.17) |
 | v0.7.3 | 2026-10-24 | 元の巨大画像は縮めたあと消す(§6.0。T.51)。R2 に移す案はやめた |
 | v0.8 | 2026-10-24 | **かんたん編集画面「マイページ」の決定を反映**(T.36.2 → T.36.3。[`owner-editor-design.md`](owner-editor-design.md) §7.1)。wp-admin の最上位メニュー「マイページ」を WordPress 同梱の部品 + 標準 REST で作り、独自の保存口は書影の取り込みだけ(§8 全面、§7.3)。作品のデータは標準の項目 + 投稿メタ + 分類 + サイト設定に置き、独自ブロックは描くだけに(§6.0・§6.2・§2)。並びは公開日時 + 保存時の 1 ルール、状態は下書き / 公開で予告は自動の印。サンプルはまとめてドロップしてドラッグで並べ替え(SortableJS を npm で同梱)。書影は FANZA・DLsite の作品番号から「取り込む」ボタンでメディアへ(§8.3。取れることは T.36.4 で確認)。原則 4 を「画像はメディアライブラリに置く(ホットリンクしない)」に改めた(§1.2)。最初の版に入れないもの(英語欄・発売前後の URL 差し替え・メニューを隠す・テンプレートロック・ブラウザ側の縮小・画面内のテーマ切り替え)を §1.3・§8.2 に。交換形式はブロック解析をやめ、`en` は残して読み飛ばす(§6.4)。ビルドは `@wordpress/scripts`、`build/` をコミット、Actions は検査だけ、CDN と Astro は使わない(§12)。ロードマップに T.36 を足し、A-9 に結論を追記(§13・付録 A-9) |
+| v0.8.1 | 2026-11-05 | §12 の構成を T.54 のリファクタリング後に合わせた(`lib/` = WordPress を読まない純粋なロジック、`includes/` = 糊、`tests/`)。試験の仕組み(`scripts/test.sh`。JS は手元、PHP はさくらの `~/doujin-profile-test/` で単体と結合。docker は使わない)と Actions の単体試験を足した。仕様そのものは変えていない |

@@ -1553,3 +1553,31 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 - `WP_CLI::add_command( 'dp', … )` に変えた(`wp dp init-site|import|export|invite|publish|doctor`)。`wp doujin` は残さない(別名なし)。標準・同居のプラグインのコマンドに `dp` は無い。
 - 現在形の文書(AGENTS.md・TASKS.md・spec・caddy-front-trial・コードの注釈)は `wp dp` にそろえた。design-log の過去の記録は追記のみの約束なので `wp doujin` のまま。
 - 退避 `~/dumps/pre-doujin-profile-cli-rename-20261105/` のあと配備(途中でいったん `wp do` で配備し、すぐ `wp dp` に直した)。本番で `wp dp` が 6 つを出し、`wp doujin`・`wp do` は未登録、`wp dp doctor` はネットワークと ftsf で NG 0。
+
+## 2026-11-05 リファクタリング(T.54。Fable max)
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-11-05 | ユーザ依頼 | 「Fable max でリファクタリングしてくれ / テスト可能なことと責務の分割、カプセル化などを重視して細かいファイルに割って構わない」 |
+| 2026-11-05 | ユーザ裁定 | 試験の場所: 「docker 使わずにリモートホストでテスト」→ 手元の docker はやめ、さくらの `~/doujin-profile-test/`(WordPress の設置先の外)で PHP の試験を回す |
+| 2026-11-05 | ユーザ裁定 | 「テストはなるべくさくらでやりたいかもね / 環境が近い」→ 単体だけでなく、さくらに使い捨ての WordPress(本番と同じ版。DB は SQLite の drop-in)を置いて結合試験も |
+
+### 何をどう割ったか(振る舞いは変えていない)
+
+- **PHP**: `includes/` を 1 責務 1 ファイルに。`data.php` → `data/{sanitize,taxonomy,meta,settings,release-date}.php`、`cover-import.php` → `import/{rest,sources,media}.php`、`cli.php`(1,124 行)→ `cli/`(親の入れ物 + 子コマンドごとに 1 クラス。`wp doujin <子>` の名前・引数・ヘルプ・出力は同じ)、`my-page.php` → `my-page/{menu,assets}.php`、`blocks.php` → `blocks/{register,render}.php`。
+  WordPress を読まないロジックは `lib/`(名前空間 `DoujinProfile\`、`lib/Autoloader.php` の小さなオートローダ。Composer は使わない — サーバに無い)へ: リンクの正規化、発売日時と公開日時のルール、作品番号、FANZA/DLsite の URL と JSON の解釈、サンプルの URL(HEAD で探る処理は注入)、画像の応答の判定、交換形式の決まり、点検の記録と判定、head の meta、ログイン後の送り先、作家検索の SQL。WordPress の関数が要る所(`sanitize_text_field` など)は callable で受ける。`includes/` は糊だけになり、`doujin_profile_*` の関数名・フック・優先度・REST の経路と応答・設定とメタの名前・守り(取る元の固定、権限、準備中に戻せるのは特権管理者と WP-CLI だけ、年齢確認は `edit_posts` に出さない)はそのまま。
+  Fable の判断: 関数名を変えなかったのは、`render.php`・`scripts/check-site.sh`(`wp eval`)・`doctor` の `has_action()` がその名前を見るため。CLI は WP-CLI の `add_command( 'doujin <子>', クラス )`(`__invoke`)で子を 1 つずつ登録し、親は説明だけのクラス。
+  小さな差: `lib/Blocks/LinkLabel` は知らないサービス種別に「その他」の表示名を返す(前は PHP の notice と空文字。正規化済みのリンクしか渡さないので表示は変わらない)。
+- **JS**: マイページの `src/my-page/lib/`(並び・リンクの決まり・状態の印・発売日時の入力・REST のエラーの文・添付の読み方・まとめて上げる流れ・取り込みの受け方)と、作品カードの `src/blocks/work-card/logic.js`(ページの数え方・めくる向き・予告の印)を WordPress の部品から切り離した。部品(React)と DOM の処理は薄くなっただけ。`build/` は作り直し(変わったのは `my-page.js` と `work-card/view.js` と、そのハッシュだけ)。
+- **消したファイル**(`deploy.sh` は `--delete` を使わないので、配備のときにサーバの `wp-content/mu-plugins/doujin-profile/includes/` から手で消す): `data.php`・`cover-import.php`・`cli.php`・`my-page.php`・`blocks.php`。残すと同じ関数が二重に定義されて致命的エラーになる。
+
+### 試験の仕組み(`scripts/test.sh`)
+
+- JS: `wp-scripts test-unit-js`(@wordpress/scripts 37 の標準は vitest 5。jest は旧式扱い)。`vite`・`vitest` を devDependencies に固定して `npm test`。53 件。
+- PHP の単体: `tests/php`(PHPUnit 9.6 の phar。GPG で署名を確かめた上で `tests/tools/` に置く。gitignore)。`lib/` だけを読み、WordPress は読まない。`scripts/test.sh php` がさくらの `~/doujin-profile-test/src/` に rsync して `php -l`(83 ファイル)と PHPUnit を回す。96 件・269 のアサーション、PHP 8.3.36 で通った。8.0 での構文検査は手元にもさくらにも PHP 8.0 が無いので、Actions(`shivammathur/setup-php` の 8.0 と 8.3)に任せる。8.1 以降の構文(enum・readonly・never・first-class callable・new in initializer)は使っていないことを目で確かめた。
+- PHP の結合: `tests/integration` + `tests/remote/integration.sh`。さくらの `~/doujin-profile-test/wp/` に本番と同じ版(`wp core version` で読む。7.1.4)の WordPress を `wp core download` し、wordpress.org の **SQLite Database Integration**(3.1.3)の `db.copy` を `db.php` にして、サブドメイン型の Multisite として `wp core multisite-install`(DNS の警告は無視)。本体と子テーマを `wp-content/` に写し、`wp doujin invite` で `ftsf.dp.test` を作り、見本(`tests/integration/fixtures/works.json` + GD でその場で作る画像)を `wp doujin import` で入れて、PHPUnit で本物の WordPress を読み込んで確かめる: 登録(フックと優先度・分類・メタ・設定・ブロック・パターン・REST の経路)、保存時の 1 ルール(`wp_insert_post`・`update_post_meta`・REST の 3 経路)、メタと設定の正規化、準備中(持ち主は戻せない・`wp eval` で訪問者の表示・`wp doujin publish`)、年齢確認、ブロックの描画(作品カード・リンクボタン・トップページのパターン)、WP-CLI の 6 コマンド(ヘルプ・`doctor` が NG 0・`init-site` の冪等・`export` の形・`import` の冪等と dry-run)、書影とサンプルの取り込み(`pre_http_request` で FANZA・DLsite を代える。照合・前の書影の削除・権限・失敗の文)、ログイン後の直行、作家名の検索。41 件・369 のアサーション(本体の PHP の警告は debug.log に無し)。1 回 3〜4 分(2 回目から。本体と drop-in はキャッシュ)。メールは `pre_wp_mail` で止め、ネットワークに出るのは wordpress.org だけ。
+- さくらで分かったこと: CLI の `memory_limit` は 128M で `wp core download` の展開に足りず、`display_errors` も切ってあるので致命的エラーが黙って消える(最初の実行が無言で止まった原因)。`/usr/local/bin/wp` は `php wp-cli.phar "$@"` だけの薄い起動スクリプトで `WP_CLI_PHP_ARGS` を渡さないため、結合試験は phar を `php -d memory_limit=512M -d display_errors=stderr` で直接動かす。`~/doujin-profile-test/` は残してある(消してよい。約 100MB)。
+
+### 結合試験で見つかった本体の既知の問題(直していない。裁定待ち)
+
+- `wp doujin invite` の `[--user=<login>]` は WP-CLI の全体の引数 `--user`(動作するユーザ)に取られ、子コマンドには届かない。既存のユーザを持ち主にする道筋は 2026-10-25 の試験でも使っておらず、いまのところ使い道が無い。直すなら `--owner=<login>` など別の名前にする(数行)。

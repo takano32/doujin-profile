@@ -1,5 +1,7 @@
-# コミットした build/ がソース (src/) と一致するかの検査だけ (spec §12)。
+# コミットした build/ がソース (src/) と一致するかの検査 (spec §12) と、単体試験。
 # ビルドし忘れを見つける。配備はしない (鍵を GitHub に置かない)。秘密情報は使わない。
+# PHP は 8.0 (旧ホストとの互換。T.26) と 8.3 (さくら) の両方で構文検査と lib/ の単体試験を回す。
+# 結合試験 (使い捨ての WordPress) はさくらでだけ行う (scripts/test.sh integration)。
 name: build-check
 
 on:
@@ -20,9 +22,29 @@ jobs:
           cache: npm
           cache-dependency-path: mu-plugins/doujin-profile/package-lock.json
       - run: npm ci
+      - run: npm test
       - run: npm run build
       - name: build/ がコミットと一致するか
         run: |
           git status --porcelain -- build
           git add -N build
           git diff --exit-code -- build
+
+  php-unit:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: [ '8.0', '8.3' ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring
+          tools: phpunit:9.6
+      - name: 構文検査 (php -l)
+        run: find mu-plugins themes tests -name '*.php' -print0 | xargs -0 -n1 php -l | grep -v '^No syntax errors' || true
+      - name: 構文検査で誤りがあれば止める
+        run: find mu-plugins themes tests -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
+      - name: lib/ の単体試験
+        run: phpunit -c tests/php/phpunit.xml.dist

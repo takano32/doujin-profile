@@ -15,11 +15,14 @@
 ## いまの状態(2026-10-25 時点。最新は design-log が正)
 
 - **2026-10-26 に再開**(2026-10-25 の中断の手順は design-log の「中断」の節)。**いまは `ftsf` からマイページの感想を待っている**(届いたら 1 件ずつ選択式に整理して聞く)。
+- **2026-11-05 に本体をリファクタリングした(T.54。手元のコミットのみ、未配備)**。配備するときは `scripts/deploy.sh`(dry-run)を目で見てから `--go` し、リポジトリで消した `wp-content/mu-plugins/doujin-profile/includes/{data,cover-import,cli,my-page,blocks}.php` をサーバで手で消す(残すと同じ関数が二重に定義されて致命的エラー)。そのあと `wp doujin doctor` と `scripts/check-site.sh`、マイページをブラウザで確かめる。
 - **本番はさくらのレンタルサーバ**(`~/www/doujin-profile/`)。**サブドメイン型の Multisite** で、ネットワークは `https://dp.no32.tk/`、各サイトは `https://<名前>.dp.no32.tk/`(spec v0.8)。サイトはメインサイト(blog_id 1)と `ftsf.dp.no32.tk`(blog_id 4。管理者 `ftsf`。f_tsf の作品 3 件・サンプル 54 枚を投入済み、成人向けの印あり、公開中)。ユーザは `takano32` と `ftsf`(どちらも特権管理者)。一時ユーザ・一時サイトは残っていない。
 - **前段に Caddy**(GCP の e2-micro、米国)。サイトごとの証明書(on-demand TLS + ask)と、さくらへの中継。本当のホスト名と訪問者の IP は合言葉付きのヘッダで渡し、`wp-config.php` の数行で受け取る。手順と戻し方は `docs/caddy-front-trial.md`。さくらの国外 IP フィルタは e2-micro の IP を許可して通している(T.25)。**e2-micro の IP が変わったら、さくら側の許可も直す必要がある。**
 - **DNS**(Value-Domain): `dp.no32.tk` と `*.dp.no32.tk` の A(35.212.198.233)と、`dp.no32.tk` の SPF の TXT。**`*.no32.tk` のワイルドカードがあるので、`dp.no32.tk` に何かレコードを足すと配下がワイルドカードから外れる**(2026-10-25 の障害。design-log)。DNS を案内する前にゾーンの構造を確かめる。
 - **本体 `mu-plugins/doujin-profile/` は配備済み**: データ層、マイページ(作品・サンプルのドラッグ、FANZA/DLsite の作品番号から書影・サンプルを取り込む、リンク集、「公開する」)、公開側のブロック、準備中、年齢確認(成人向けのサイトだけ。検索エンジンには載せる)、head(OGP)、WP-CLI(`wp dp init-site|import|export|invite|publish|doctor`)。子テーマ `themes/doujin-profile-tt5/` も配備済み(`scripts/deploy.sh --themes`)。元の巨大画像は `mu-plugins/doujin-profile-discard-original-image.php` で消す。
 - JS は `mu-plugins/doujin-profile/` で `npm install` → `npm run build`(node 24.15 以上)、`build/` もコミットする(Actions がビルドし忘れを検査)。`deploy.sh` は `--delete` を使わないので、リポジトリで消したファイルはサーバでも手で消す。
+- **本体の構成(2026-11-05 のリファクタリング。T.54)**: `lib/` が WordPress を読まない純粋なロジック(名前空間 `DoujinProfile\`、小さなオートローダ)、`includes/` が WordPress の糊(フック・REST・WP-CLI。関数名 `doujin_profile_*` は変えていない)。マイページの JS も `src/my-page/lib/`(純粋)と部品に分かれている。地図は `mu-plugins/doujin-profile/doujin-profile.php` の先頭と spec §12。
+- **試験は `scripts/test.sh`**(ユーザ裁定 2026-11-05「docker 使わずにリモートホストでテスト」「なるべくさくらで」): `scripts/test.sh js`(手元の vitest)、`scripts/test.sh php`(さくらの `~/doujin-profile-test/` に同期して `php -l` と PHPUnit の単体試験)、`scripts/test.sh integration`(同じ場所に本番と同じ版の WordPress を SQLite で使い捨てに設置して結合試験)、`scripts/test.sh`(すべて)。さくらで触るのは `~/doujin-profile-test/` だけ(本番の WordPress・DB には触れない。消してよい)。PHPUnit の phar は `tests/tools/` に取ってくる(gitignore)。
 - **メール**: 配布プラグイン WP Mail SMTP(ネットワーク有効)で、さくらの SMTP に認証して送る。設定は `wp-config.php` の `WPMS_*` 定数で、**パスワードはサイト所有者が入れた。Claude は値を見ない・表示しない**。招待メールが Gmail に届くことを確認済み。
 - 守りは wordpress.org の配布物のプラグインで: Limit Login Attempts Reloaded(ログイン。2 段階認証は求めない)、Disable Comments、Disable XML-RPC。どれもネットワーク有効。
 - 旧ホスト `profile.xwp.jp`(Xserver。サブディレクトリ型の Multisite)は 2026-09-18 の状態のまま(T.26)。
@@ -51,6 +54,7 @@
 | `scripts/remote.sh '<sh のコマンド列>'` | 設置先で任意のコマンドを実行する。ログインシェルが csh でも sh で動く(標準入力で `sh -s` に渡している) |
 | `scripts/deploy.sh [--go]` | `mu-plugins/` を `wp-content/mu-plugins/` へ配備する。既定は dry-run。`--delete` は使わない(宛先の上に `wp-config.php` がある) |
 | `scripts/check-multisite.sh` | Multisite(サブディレクトリ型)にできるかを読み取りだけで調べる |
+| `scripts/test.sh [js\|php\|lint\|integration\|sync]` | 試験。JS は手元、PHP はターゲットの `~/doujin-profile-test/` で(`tests/remote/*.sh` を同期して実行) |
 
 - いまの本番は `sakura`(`https://doujin-profile.no32.tk/`。`docs/environment.md` §S)。**同じアカウントに別のサイトが同居している**(`~/www/tsket/` ほか)。WordPress の設置先の外には触れない。
 - 前段の Caddy は e2-micro(`ssh takano32@35.212.198.233`)。`dp.no32.tk` と `*.dp.no32.tk` をさくらへ中継している。同居サービスがあるので、Caddyfile を変えるときは `doujin-profile` のブロックだけを触る(`docs/caddy-front-trial.md`)。
