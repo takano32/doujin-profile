@@ -1,2 +1,7 @@
 # 依存パッケージ (手元で npm install。build/ はコミットする)
 node_modules/
+# 試験の道具 (scripts/test.sh が取ってくる。さくらへ送るだけ)
+tests/tools/*.phar
+tests/tools/*.phar.asc
+# さくらの結合試験が手元に残すもの
+tests/integration/.wp/

@@ -13,7 +13,7 @@
  *   5. 固定ページ「ホーム」(パターン doujin-profile/front-page、テンプレート page-no-title) を作ってトップにする
  *   6. 書き換え規則の作り直し (分類 artist の /artist/<slug>/ も入る)
  *
- * 同じ処理を WP-CLI の `wp dp init-site --url=…` からも呼べる (includes/cli.php。作成済みのサイト向け)。
+ * 同じ処理を WP-CLI の `wp doujin init-site --url=…` からも呼べる (includes/cli/init-site.php。作成済みのサイト向け)。
  * 何度呼んでも壊れない: あるものは作らず、持ち主が変えた設定 (パーマリンク・トップページ) は上書きしない。
  * メインサイトには効かせない。
  */
@@ -137,15 +137,7 @@ function doujin_profile_ensure_front_page( $author_id = 0 ) {
 	$what    = '既にある固定ページ「ホーム」をトップに';
 	if ( ! $page_id ) {
 		if ( ! $author_id ) {
-			$admins    = get_users(
-				array(
-					'role'    => 'administrator',
-					'number'  => 1,
-					'orderby' => 'ID',
-					'fields'  => 'ID',
-				)
-			);
-			$author_id = $admins ? (int) $admins[0] : 0;
+			$author_id = doujin_profile_first_admin_id();
 		}
 		$page_id = wp_insert_post(
 			wp_slash(
@@ -179,4 +171,22 @@ function doujin_profile_ensure_front_page( $author_id = 0 ) {
 	update_option( 'page_on_front', $page_id );
 
 	return $what . " (ID {$page_id})";
+}
+
+/**
+ * このサイトの管理者 (最初の 1 人) のユーザ ID。「ホーム」や WP-CLI の import で作る投稿の作者に使う。
+ *
+ * @return int いなければ 0。
+ */
+function doujin_profile_first_admin_id() {
+	$admins = get_users(
+		array(
+			'role'    => 'administrator',
+			'number'  => 1,
+			'orderby' => 'ID',
+			'fields'  => 'ID',
+		)
+	);
+
+	return $admins ? (int) $admins[0] : 0;
 }

@@ -1,50 +1,18 @@
 <?php
 /**
- * 公開側の独自ブロック (spec §6.2。T.32.3)。
- *
- * ブロックは属性にデータを持たず、投稿の項目・メタ・分類・サイト設定を読んで描くだけ (動的ブロック)。
- * 定義は src/blocks/<名前>/block.json で、@wordpress/scripts が build/blocks/<名前>/ に
- * block.json・render.php・index.js (エディタ)・view.js (表示側) を出す。ここは登録と、
- * render.php が共用する描き方の関数だけ。
- *
- *   doujin-profile/work-card   作品カード (サンプルビューアを含む)
- *   doujin-profile/links       リンクボタン (サイト設定 doujin_profile_links の shops / accounts)
- *   doujin-profile/more-works  さらに作品を見る (クエリーループの次のページを下へ継ぎ足す。T.31.4)
+ * 独自ブロックの render.php (build/blocks/∗/render.php) が共用する描き方 (spec §6.2)。
  *
  * 見た目はテーマに任せる: ボタンはコアのボタンブロックのクラス (wp-block-button__link wp-element-button) を
  * 借りて、テーマの theme.json のボタンの装いを継ぐ。色・大きさ・余白の独自の指定はしない (T.32.3.3.2)。
+ * 表示名と rel の決まりは lib/Blocks/LinkLabel.php、発売日の表記は lib/Data/ReleaseLabel.php。
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/**
- * build/blocks/ 以下の block.json をすべて登録する (ビルドが無ければ何もしない)。
- */
-function doujin_profile_register_blocks() {
-	$metadata_files = glob( DOUJIN_PROFILE_DIR . '/build/blocks/*/block.json' );
-	foreach ( $metadata_files ? $metadata_files : array() as $metadata_file ) {
-		register_block_type( dirname( $metadata_file ) );
-	}
-}
-add_action( 'init', 'doujin_profile_register_blocks' );
-
-/**
- * インサーターに「サークル紹介」のカテゴリを足す (独自ブロックとパターンの置き場)。
- *
- * @param array $categories ブロックのカテゴリ。
- * @return array
- */
-function doujin_profile_block_category( $categories ) {
-	$categories[] = array(
-		'slug'  => 'doujin-profile',
-		'title' => 'サークル紹介',
-	);
-
-	return $categories;
-}
-add_filter( 'block_categories_all', 'doujin_profile_block_category' );
+use DoujinProfile\Blocks\LinkLabel;
+use DoujinProfile\Data\ReleaseLabel;
 
 /**
  * ブロックエディタからのプレビュー描画 (REST の block-renderer) かどうか。
@@ -78,18 +46,7 @@ function doujin_profile_editor_notice( $message ) {
  * @return string
  */
 function doujin_profile_link_label( $link, $with_verb = false ) {
-	if ( '' !== $link['label'] ) {
-		return $link['label'];
-	}
-
-	if ( 'other' === $link['service'] ) {
-		return $with_verb ? '販売ページを見る' : 'リンク';
-	}
-
-	$services = doujin_profile_services();
-	$name     = $services[ $link['service'] ];
-
-	return $with_verb ? $name . 'で見る' : $name;
+	return LinkLabel::of( $link, (bool) $with_verb );
 }
 
 /**
@@ -111,16 +68,14 @@ function doujin_profile_render_link_buttons( $links, $classes = '', $with_verb =
 	$buttons   = '';
 	$sponsored = false;
 	foreach ( $links as $link ) {
-		$rel = 'noopener';
 		if ( $link['sponsored'] ) {
-			$rel      .= ' sponsored';
 			$sponsored = true;
 		}
 		$buttons .= sprintf(
 			'<div class="wp-block-button doujin-profile-link doujin-profile-link--%1$s"><a class="wp-block-button__link wp-element-button" href="%2$s" target="_blank" rel="%3$s">%4$s</a></div>',
 			esc_attr( $link['service'] ),
 			esc_url( $link['url'] ),
-			esc_attr( $rel ),
+			esc_attr( LinkLabel::rel( (bool) $link['sponsored'] ) ),
 			esc_html( doujin_profile_link_label( $link, $with_verb ) )
 		);
 	}
@@ -143,19 +98,14 @@ function doujin_profile_render_link_buttons( $links, $classes = '', $with_verb =
  * @return array{label: string, upcoming: bool, release_at: string} release_at は ISO 8601 (無ければ空)。
  */
 function doujin_profile_release_info( $post_id ) {
-	$label    = doujin_profile_sanitize_release_label( get_post_meta( $post_id, 'doujin_release_label', true ) );
-	$datetime = doujin_profile_parse_datetime( get_post_meta( $post_id, 'doujin_release_at', true ) );
-	$upcoming = $datetime && $datetime->getTimestamp() > time();
-
-	if ( '' === $label && $datetime ) {
-		$date  = wp_date( 'Y年n月j日', $datetime->getTimestamp() );
-		$label = $upcoming ? '発売予定日: ' . $date : $date . '発売';
-	}
-
-	return array(
-		'label'      => $label,
-		'upcoming'   => (bool) $upcoming,
-		'release_at' => $datetime ? $datetime->setTimezone( wp_timezone() )->format( 'Y-m-d\TH:i:sP' ) : '',
+	return ReleaseLabel::info(
+		doujin_profile_sanitize_release_label( get_post_meta( $post_id, 'doujin_release_label', true ) ),
+		doujin_profile_parse_datetime( get_post_meta( $post_id, 'doujin_release_at', true ) ),
+		time(),
+		static function ( $timestamp ) {
+			return wp_date( 'Y年n月j日', $timestamp );
+		},
+		wp_timezone()
 	);
 }
 

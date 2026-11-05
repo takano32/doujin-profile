@@ -4,12 +4,14 @@
  *
  * メインサイト以外でログインしたら、誰でもそのサイトのマイページへ送る。
  * コアの既定はダッシュボード。特権管理者かどうかでは分けない (分けると ftsf に効かないため。T.36.2)。
- * 「ログインしてから、さっき開こうとした画面へ」(redirect_to が付いている) は邪魔しない。
+ * 「ログインしてから、さっき開こうとした画面へ」(redirect_to が付いている) は邪魔しない。判定は lib/Login/Redirect.php。
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+
+use DoujinProfile\Login\Redirect;
 
 /**
  * ログイン後の送り先をマイページにする。
@@ -28,7 +30,7 @@ function doujin_profile_login_redirect( $redirect_to, $requested_redirect_to, $u
 	if ( '' !== $requested_redirect_to ) {
 		$path      = (string) wp_parse_url( $requested_redirect_to, PHP_URL_PATH );
 		$dashboard = (string) wp_parse_url( admin_url(), PHP_URL_PATH );
-		if ( ! in_array( untrailingslashit( $path ), array( untrailingslashit( $dashboard ), $dashboard . 'index.php' ), true ) ) {
+		if ( ! Redirect::isDashboard( $path, $dashboard ) ) {
 			return $redirect_to;
 		}
 	}

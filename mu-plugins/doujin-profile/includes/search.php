@@ -4,19 +4,17 @@
  *
  * 標準の検索はタイトル・本文・抜粋を見る。検索語に名前が部分一致する作家 (分類 artist) があれば、
  * その作家の作品も結果に含める。検索の SQL (posts_search) の前に OR で足すだけで、
- * 並び順・ページ送り・検索ブロックは標準のまま。高度な絞り込みは作らない。
+ * 並び順・ページ送り・検索ブロックは標準のまま。高度な絞り込みは作らない。SQL の組み立ては lib/Search/ArtistSearch.php。
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+use DoujinProfile\Search\ArtistSearch;
+
 /**
  * 検索語に当たる作家の作品を、検索の WHERE 句に OR で足す。
- *
- * コアが作る $search は " AND ((…) AND (…)) " の形 (ログインしていなければ末尾に
- * " AND (post_password = '') " が付く)。中身を書き換えずに、全体を
- * " AND ( 作家の条件 OR ( 1=1 $search ) ) " で包む。
  *
  * @param string   $search 検索の SQL (WHERE 句の一部)。
  * @param WP_Query $query  クエリー。
@@ -44,16 +42,11 @@ function doujin_profile_search_by_artist( $search, $query ) {
 		}
 	}
 
-	$tt_ids = array_values( array_unique( array_map( 'intval', $tt_ids ) ) );
+	$tt_ids = ArtistSearch::uniqueIds( $tt_ids );
 	if ( ! $tt_ids ) {
 		return $search;
 	}
 
-	$by_artist = "{$wpdb->posts}.ID IN ( SELECT object_id FROM {$wpdb->term_relationships} WHERE term_taxonomy_id IN (" . implode( ',', $tt_ids ) . ') )';
-	if ( ! is_user_logged_in() ) {
-		$by_artist .= " AND {$wpdb->posts}.post_password = ''"; // コアの検索と同じく、パスワード付きの投稿は出さない。
-	}
-
-	return " AND ( ( {$by_artist} ) OR ( 1=1 {$search} ) ) ";
+	return ArtistSearch::wrap( $search, $tt_ids, $wpdb->posts, $wpdb->term_relationships, ! is_user_logged_in() );
 }
 add_filter( 'posts_search', 'doujin_profile_search_by_artist', 10, 2 );

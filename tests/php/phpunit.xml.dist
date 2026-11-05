@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 単体試験 (lib/ の純粋なロジック。WordPress は読まない)。実行は scripts/test.sh php (さくらで PHPUnit 9.6 の phar)。 -->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.6/phpunit.xsd"
+         bootstrap="bootstrap.php"
+         colors="true"
+         failOnWarning="true"
+         failOnRisky="true"
+         beStrictAboutOutputDuringTests="true"
+         cacheResult="false">
+	<testsuites>
+		<testsuite name="unit">
+			<directory>Unit</directory>
+		</testsuite>
+	</testsuites>
+	<php>
+		<ini name="date.timezone" value="UTC"/>
+		<ini name="error_reporting" value="-1"/>
+	</php>
+</phpunit>
