@@ -2,12 +2,12 @@
 /**
  * WP-CLI (spec §8.5。T.32.9)。運営者の道具。コア標準のコマンドで足りるものは作らない。
  *
- *   wp doujin init-site --url=<サイト>                                        新しいサイトの初期設定を、作成済みのサイトに施す (includes/init-site.php)
- *   wp doujin import <file.json> --url=<サイト> [--images=<dir>] [--dry-run]  交換形式 (spec §6.4) から入れる
- *   wp doujin export --url=<サイト> [--out=<file>]                            同じ形で書き出す (画像は URL)
- *   wp doujin invite <名前> <メール> [--title=] [--mature] [--user=] [--dry-run] 招待: サイトと持ち主を作り、準備中で始める (spec §7.4)
- *   wp doujin publish <名前> [--unpublish]                                    準備中を解く / 戻す (spec §7.6。持ち主はマイページでも公開できる)
- *   wp doujin doctor [--url=<サイト>] [--fix]                                 点検 (読み取り。--fix は安全な 3 つだけ直す)
+ *   wp dp init-site --url=<サイト>                                        新しいサイトの初期設定を、作成済みのサイトに施す (includes/init-site.php)
+ *   wp dp import <file.json> --url=<サイト> [--images=<dir>] [--dry-run]  交換形式 (spec §6.4) から入れる
+ *   wp dp export --url=<サイト> [--out=<file>]                            同じ形で書き出す (画像は URL)
+ *   wp dp invite <名前> <メール> [--title=] [--mature] [--user=] [--dry-run] 招待: サイトと持ち主を作り、準備中で始める (spec §7.4)
+ *   wp dp publish <名前> [--unpublish]                                    準備中を解く / 戻す (spec §7.6。持ち主はマイページでも公開できる)
+ *   wp dp doctor [--url=<サイト>] [--fix]                                 点検 (読み取り。--fix は安全な 3 つだけ直す)
  *
  * invite はコアの検証 (wpmu_validate_user_signup / wpmu_validate_blog_signup) と作成 (wpmu_create_user / wpmu_create_blog) に乗る。
  * wpmu_create_blog → wp_initialize_site で includes/init-site.php の初期設定が自動で走るので、ここでは呼ばない (二重にしない)。
@@ -53,7 +53,7 @@ class Doujin_Profile_CLI {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp doujin init-site --url=https://ftsf.dp.no32.tk
+	 *     wp dp init-site --url=https://ftsf.dp.no32.tk
 	 *
 	 * @subcommand init-site
 	 */
@@ -94,8 +94,8 @@ class Doujin_Profile_CLI {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp doujin import ~/dumps/doujin-profile-import-f_tsf/f_tsf.json --url=https://ftsf.dp.no32.tk --dry-run
-	 *     wp doujin import ~/dumps/doujin-profile-import-f_tsf/f_tsf.json --url=https://ftsf.dp.no32.tk
+	 *     wp dp import ~/dumps/doujin-profile-import-f_tsf/f_tsf.json --url=https://ftsf.dp.no32.tk --dry-run
+	 *     wp dp import ~/dumps/doujin-profile-import-f_tsf/f_tsf.json --url=https://ftsf.dp.no32.tk
 	 */
 	public function import( $args, $assoc_args ) {
 		$this->require_profile_site();
@@ -152,7 +152,7 @@ class Doujin_Profile_CLI {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp doujin export --url=https://ftsf.dp.no32.tk --out=ftsf.json
+	 *     wp dp export --url=https://ftsf.dp.no32.tk --out=ftsf.json
 	 */
 	public function export( $args, $assoc_args ) {
 		$this->require_profile_site();
@@ -248,8 +248,8 @@ class Doujin_Profile_CLI {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp doujin invite example circle@example.com --title="サークル名" --mature --dry-run
-	 *     wp doujin invite example circle@example.com --title="サークル名" --mature
+	 *     wp dp invite example circle@example.com --title="サークル名" --mature --dry-run
+	 *     wp dp invite example circle@example.com --title="サークル名" --mature
 	 */
 	public function invite( $args, $assoc_args ) {
 		if ( ! is_multisite() ) {
@@ -337,7 +337,7 @@ class Doujin_Profile_CLI {
 			WP_CLI::log( 'パスワード設定のリンクをメールで送りました。' );
 		}
 
-		WP_CLI::success( "{$url} を準備中で作りました。持ち主 {$user->user_login}。点検: wp doujin doctor --url={$url}" );
+		WP_CLI::success( "{$url} を準備中で作りました。持ち主 {$user->user_login}。点検: wp dp doctor --url={$url}" );
 	}
 
 	/**
@@ -355,8 +355,8 @@ class Doujin_Profile_CLI {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp doujin publish example
-	 *     wp doujin publish example --unpublish
+	 *     wp dp publish example
+	 *     wp dp publish example --unpublish
 	 */
 	public function publish( $args, $assoc_args ) {
 		if ( ! is_multisite() ) {
@@ -404,9 +404,9 @@ class Doujin_Profile_CLI {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp doujin doctor
-	 *     wp doujin doctor --url=https://ftsf.dp.no32.tk
-	 *     wp doujin doctor --url=https://ftsf.dp.no32.tk --fix
+	 *     wp dp doctor
+	 *     wp dp doctor --url=https://ftsf.dp.no32.tk
+	 *     wp dp doctor --url=https://ftsf.dp.no32.tk --fix
 	 */
 	public function doctor( $args, $assoc_args ) {
 		$this->fix = (bool) \WP_CLI\Utils\get_flag_value( $assoc_args, 'fix', false );
@@ -505,7 +505,7 @@ class Doujin_Profile_CLI {
 	 */
 	private function doctor_site( $site ) {
 		$url = $site ? "https://{$site->domain}{$site->path}" : home_url( '/' );
-		$fix_init = "wp doujin init-site --url={$url}";
+		$fix_init = "wp dp init-site --url={$url}";
 
 		// URL。
 		foreach ( array( 'home', 'siteurl' ) as $name ) {
@@ -517,7 +517,7 @@ class Doujin_Profile_CLI {
 		// 状態。
 		if ( $site ) {
 			$preparing = (bool) get_option( DOUJIN_PROFILE_PREPARING_OPTION, false );
-			$this->info( $preparing ? '準備中 (ログインしていない人には「準備中です」だけ。公開は持ち主のマイページか wp doujin publish ' . strtok( $site->domain, '.' ) . ')' : '公開中' );
+			$this->info( $preparing ? '準備中 (ログインしていない人には「準備中です」だけ。公開は持ち主のマイページか wp dp publish ' . strtok( $site->domain, '.' ) . ')' : '公開中' );
 			$this->info( '成人向けの印: ' . ( (int) $site->mature ? 'オン (年齢確認と rating=adult が出る)' : 'オフ (年齢確認は出ない。付けるなら wp site mature ' . $site->blog_id . ')' ) );
 			$this->check( ! (int) $site->archived && ! (int) $site->spam && ! (int) $site->deleted, 'アーカイブ・スパム・削除の印が無い', "wp site unarchive/unspam {$site->blog_id}" );
 		}
@@ -1121,4 +1121,4 @@ class Doujin_Profile_CLI {
 	}
 }
 
-WP_CLI::add_command( 'doujin', 'Doujin_Profile_CLI' );
+WP_CLI::add_command( 'dp', 'Doujin_Profile_CLI' );

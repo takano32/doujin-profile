@@ -168,7 +168,7 @@ e2-micro で行ったこと:
 
 気づいたこと:
 
-- **WP-CLI で作ったサイトの URL が `http://` で登録された**(CLI には https の文脈が無いため)。サイトの `home` / `siteurl` を https に直す必要がある。spec の `wp doujin invite` では、作成直後に https にそろえる。
+- **WP-CLI で作ったサイトの URL が `http://` で登録された**(CLI には https の文脈が無いため)。サイトの `home` / `siteurl` を https に直す必要がある。spec の `wp dp invite` では、作成直後に https にそろえる。
 - 存在しないサブドメインでも on-demand で証明書が発行される(`ask` が無いため)。`ask` を足すのは残作業。
 - 存在しない名前を登録ページへ送るのが嫌なら、`NOBLOGREDIRECT` で転送先を決められる(コア標準)。
 

@@ -13,7 +13,7 @@
  *   5. 固定ページ「ホーム」(パターン doujin-profile/front-page、テンプレート page-no-title) を作ってトップにする
  *   6. 書き換え規則の作り直し (分類 artist の /artist/<slug>/ も入る)
  *
- * 同じ処理を WP-CLI の `wp doujin init-site --url=…` からも呼べる (includes/cli.php。作成済みのサイト向け)。
+ * 同じ処理を WP-CLI の `wp dp init-site --url=…` からも呼べる (includes/cli.php。作成済みのサイト向け)。
  * 何度呼んでも壊れない: あるものは作らず、持ち主が変えた設定 (パーマリンク・トップページ) は上書きしない。
  * メインサイトには効かせない。
  */

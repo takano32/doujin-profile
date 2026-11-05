@@ -2,7 +2,7 @@
 /**
  * 準備中 (spec §7.6。T.11。ユーザ裁定 2026-10-25「持ち主がマイページのボタンで自分で公開する」)。
  *
- * 新しく招待したサイトは「準備中」で始まり (wp doujin invite)、持ち主がマイページの「公開する」で公開する。
+ * 新しく招待したサイトは「準備中」で始まり (wp dp invite)、持ち主がマイページの「公開する」で公開する。
  * 印はサイトの設定 doujin_profile_preparing (真偽)。register_setting() で標準の REST (wp/v2/settings) に載せるので、
  * マイページは標準の保存口だけで書く (権限はコアの manage_options)。独自の保存口は作らない。
  *
@@ -11,7 +11,7 @@
  * トップページが 2xx かで「ネットワークにあるサイト」を判定する (docs/caddy-front-trial.md) ので、503 だと
  * 準備中のサイトは証明書が取れず、持ち主がログインすらできない。検索エンジンには meta robots と X-Robots-Tag で載せないよう頼む。
  * template_redirect (優先度 1。サイトマップより先) で止めるので、REST・ログイン・管理画面・robots.txt は妨げない。
- * 公開 → 準備中へ戻せるのは運営者だけ (特権管理者か WP-CLI の wp doujin publish --unpublish)。持ち主の REST からは戻せない。
+ * 公開 → 準備中へ戻せるのは運営者だけ (特権管理者か WP-CLI の wp dp publish --unpublish)。持ち主の REST からは戻せない。
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

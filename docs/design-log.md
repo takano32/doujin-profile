@@ -1543,3 +1543,13 @@ Fable が Imsanity 2.9.4 と WordPress 7.1.3 のコードを読んで決めた�
 - 作品の一覧の 100 件超: REST は 1 回 100 件までなので、「さらに表示」で次の 100 件を下へ継ぎ足す(`src/my-page/works.js`。ページごとに標準の問い合わせ、ページ数は core-data の `getEntityRecordsTotalPages`)。独自の REST は足していない。
 - 退避 `~/dumps/pre-doujin-profile-works-paging-20261026/` のあと配備。試験: ftsf(3 件)ではボタンが出ず 3 件とも出る。一時サイト `dptestpage`(blog_id 7)に下書きを 101 件作り、一時ユーザで開くと 100 件 +「さらに表示」→ 押すと 101 件でボタンが消える。コンソールのエラーなし。一時サイト・一時ユーザ・空のアップロードのディレクトリ(sites/7)は消した。
 - 試験の手法の注意: ブラウザ側で `per_page=100` を 2 に書き換えて試すのは使えない。core-data が「100 件ずつのはずが総数 3 で 2 件しか無い」と見て一覧を null にする。件数の多い試験は一時サイトで本物の投稿を作る。
+
+## 2026-11-05 WP-CLI のコマンド名を `wp dp` に
+
+| 日付 | 種別 | 内容 |
+|---|---|---|
+| 2026-11-05 | ユーザ指示 | 「wp dp になってる？サブコマンド」→ いまは `wp doujin` と答えた →「wp do にしたい」→ 途中で「間違い / wp dp / doujin profile」 |
+
+- `WP_CLI::add_command( 'dp', … )` に変えた(`wp dp init-site|import|export|invite|publish|doctor`)。`wp doujin` は残さない(別名なし)。標準・同居のプラグインのコマンドに `dp` は無い。
+- 現在形の文書(AGENTS.md・TASKS.md・spec・caddy-front-trial・コードの注釈)は `wp dp` にそろえた。design-log の過去の記録は追記のみの約束なので `wp doujin` のまま。
+- 退避 `~/dumps/pre-doujin-profile-cli-rename-20261105/` のあと配備(途中でいったん `wp do` で配備し、すぐ `wp dp` に直した)。本番で `wp dp` が 6 つを出し、`wp doujin`・`wp do` は未登録、`wp dp doctor` はネットワークと ftsf で NG 0。
