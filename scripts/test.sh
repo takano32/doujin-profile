@@ -56,18 +56,25 @@ run_remote() {
 	dp_remote "sh \"\$HOME/$REMOTE_DIR/src/tests/remote/$1\" ${2:-}"
 }
 
+# 結合試験は本番と同じ版の WordPress で行う (本番の版を読むだけ。書かない)
+run_integration() {
+	version=$(dp_remote 'wp core version' | tail -1 | tr -d '\r')
+	echo "== 結合試験 [$DP_TARGET]: 本番の WordPress は $version"
+	run_remote integration.sh "$version"
+}
+
 what=${1:-all}
 case "$what" in
 	all)
 		run_js
 		sync_remote
 		run_remote php.sh all
-		run_remote integration.sh
+		run_integration
 		;;
 	js) run_js ;;
 	php) sync_remote; run_remote php.sh all ;;
 	lint) sync_remote; run_remote php.sh lint ;;
-	integration) sync_remote; run_remote integration.sh ;;
+	integration) sync_remote; run_integration ;;
 	sync) sync_remote ;;
 	*) usage ;;
 esac

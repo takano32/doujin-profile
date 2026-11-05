@@ -1,0 +1,45 @@
+{
+	"name": "ftsf",
+	"title": { "ja": "試験サークル" },
+	"lead": { "ja": "結合試験のリード文" },
+	"mature": true,
+	"theme": "doujin-profile-tt5",
+	"shops": [
+		{ "service": "fanza", "url": "https://www.dmm.co.jp/dc/doujin/-/list/=/article=maker/id=1/", "label": { "ja": "FANZA の店", "en": "FANZA shop" } },
+		{ "service": "booth", "url": "https://example.booth.pm/", "sponsored": true },
+		{ "service": "other", "url": "http://insecure.example/" }
+	],
+	"accounts": [
+		{ "service": "x", "url": "https://x.com/example" }
+	],
+	"works": [
+		{
+			"key": "work-one",
+			"status": "publish",
+			"title": { "ja": "作品その一", "en": "Work One" },
+			"summary": { "ja": "あらすじ一。<b>太字</b>も。" },
+			"artists": [ "作家A", "作家B" ],
+			"release_at": "2026-01-10T00:00:00+09:00",
+			"links": [
+				{ "service": "dlsite", "url": "https://www.dlsite.com/maniax/work/=/product_id/RJ00000001.html", "sponsored": true },
+				{ "service": "fanza", "url": "https://www.dmm.co.jp/dc/doujin/-/detail/=/cid=d_000001/", "label": { "ja": "FANZA で買う" } }
+			],
+			"cover": "images/cover1.jpg",
+			"samples": [ "images/sample1.jpg", "images/sample2.jpg", "images/sample3.jpg" ]
+		},
+		{
+			"key": "work-two",
+			"status": "publish",
+			"title": { "ja": "作品その二" },
+			"release_at": "2099-12-31T00:00:00+09:00",
+			"release_label": { "ja": "2099年末" },
+			"cover": "images/cover2.jpg",
+			"samples": []
+		},
+		{
+			"status": "draft",
+			"title": { "ja": "下書きの作品" },
+			"release_at": "not a date"
+		}
+	]
+}
