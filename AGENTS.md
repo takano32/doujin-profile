@@ -15,7 +15,7 @@
 ## いまの状態(2026-10-25 時点。最新は design-log が正)
 
 - **2026-10-26 に再開**(2026-10-25 の中断の手順は design-log の「中断」の節)。**いまは `ftsf` からマイページの感想を待っている**(届いたら 1 件ずつ選択式に整理して聞く)。
-- **2026-11-05 に本体をリファクタリングした(T.54。手元のコミットのみ、未配備)**。配備するときは `scripts/deploy.sh`(dry-run)を目で見てから `--go` し、リポジトリで消した `wp-content/mu-plugins/doujin-profile/includes/{data,cover-import,cli,my-page,blocks}.php` をサーバで手で消す(残すと同じ関数が二重に定義されて致命的エラー)。そのあと `wp doujin doctor` と `scripts/check-site.sh`、マイページをブラウザで確かめる。
+- **2026-11-05 に本体をリファクタリングした(T.54。手元のコミットのみ、未配備)**。配備するときは `scripts/deploy.sh`(dry-run)を目で見てから `--go` し、リポジトリで消した `wp-content/mu-plugins/doujin-profile/includes/{data,cover-import,cli,my-page,blocks}.php` をサーバで手で消す(新しい本体はこれらを読まないので残っても害は無いが、正本と揃えるため)。そのあと `wp doujin doctor` と `scripts/check-site.sh`、マイページをブラウザで確かめる。
 - **本番はさくらのレンタルサーバ**(`~/www/doujin-profile/`)。**サブドメイン型の Multisite** で、ネットワークは `https://dp.no32.tk/`、各サイトは `https://<名前>.dp.no32.tk/`(spec v0.8)。サイトはメインサイト(blog_id 1)と `ftsf.dp.no32.tk`(blog_id 4。管理者 `ftsf`。f_tsf の作品 3 件・サンプル 54 枚を投入済み、成人向けの印あり、公開中)。ユーザは `takano32` と `ftsf`(どちらも特権管理者)。一時ユーザ・一時サイトは残っていない。
 - **前段に Caddy**(GCP の e2-micro、米国)。サイトごとの証明書(on-demand TLS + ask)と、さくらへの中継。本当のホスト名と訪問者の IP は合言葉付きのヘッダで渡し、`wp-config.php` の数行で受け取る。手順と戻し方は `docs/caddy-front-trial.md`。さくらの国外 IP フィルタは e2-micro の IP を許可して通している(T.25)。**e2-micro の IP が変わったら、さくら側の許可も直す必要がある。**
 - **DNS**(Value-Domain): `dp.no32.tk` と `*.dp.no32.tk` の A(35.212.198.233)と、`dp.no32.tk` の SPF の TXT。**`*.no32.tk` のワイルドカードがあるので、`dp.no32.tk` に何かレコードを足すと配下がワイルドカードから外れる**(2026-10-25 の障害。design-log)。DNS を案内する前にゾーンの構造を確かめる。
