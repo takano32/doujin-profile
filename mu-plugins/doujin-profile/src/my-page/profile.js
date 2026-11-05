@@ -35,7 +35,7 @@ export function ProfileCard() {
 		setSiteIcon( id );
 		setSiteLogo( id );
 	};
-	const icon = useSelect( ( select ) => ( iconId ? select( coreStore ).getMedia( iconId ) : null ), [ iconId ] );
+	const icon = useSelect( ( select ) => ( iconId ? select( coreStore ).getEntityRecord( 'postType', 'attachment', iconId ) : null ), [ iconId ] );
 	const { isLoaded, hasEdits, isSaving, save, notice, clearNotice } = useSiteSave();
 
 	// 準備中 → 公開 (T11)。true / false 以外 (古い本体で設定が無い) なら何も出さない。

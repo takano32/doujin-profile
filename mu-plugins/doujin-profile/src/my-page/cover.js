@@ -20,7 +20,7 @@ import { adoptAttachment, uploadImages } from './media';
  * @param {boolean}  props.disabled 保存中など。
  */
 export function CoverField( { workId, value, onChange, disabled } ) {
-	const media = useSelect( ( select ) => ( value ? select( coreStore ).getMedia( value ) : null ), [ value ] );
+	const media = useSelect( ( select ) => ( value ? select( coreStore ).getEntityRecord( 'postType', 'attachment', value ) : null ), [ value ] );
 	const [ busy, setBusy ] = useState( false );
 	const [ notice, setNotice, clearNotice ] = useNotice();
 	const locked = disabled || busy;
