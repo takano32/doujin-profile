@@ -21,7 +21,7 @@
  *   includes/patterns.php             パターン (プロフィールの見出し・トップページ)
  *   includes/init-site.php            新しいサイトの初期設定 (wp_initialize_site。https・初期データの削除・トップページ)
  *   includes/preparing.php            準備中 (設定 doujin_profile_preparing。編集できない訪問者には「準備中です」だけ)
- *   includes/cli/                     WP-CLI (wp doujin init-site / import / export / invite / publish / doctor。子コマンドごとに 1 ファイル)
+ *   includes/cli/                     WP-CLI (wp dp init-site / import / export / invite / publish / doctor。子コマンドごとに 1 ファイル)
  *   includes/age-gate.php             年齢確認 (成人向けの印が付いたサイトだけ)
  *   includes/head.php                 head の説明文・OGP・Twitter カード (テーマに依存しない)
  *   src/                              JS のソース。build/ に手元でビルドしてコミットする (サーバに node は無い)。純粋なロジックは src/∗/lib/ (jest で試験)

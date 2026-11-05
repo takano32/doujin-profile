@@ -1,6 +1,6 @@
 <?php
 /**
- * wp doujin の親 (説明だけの入れ物)。子コマンドは includes/cli/∗.php に 1 つずつ。
+ * wp dp の親 (説明だけの入れ物)。子コマンドは includes/cli/∗.php に 1 つずつ。
  */
 
 namespace DoujinProfile\Commands;

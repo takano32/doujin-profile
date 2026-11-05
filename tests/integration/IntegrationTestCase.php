@@ -98,7 +98,7 @@ abstract class IntegrationTestCase extends TestCase {
 	/**
 	 * wp (WP-CLI) を子プロセスで実行する。
 	 *
-	 * @param string $args  wp のあとの引数 (sh の形。例 'doujin doctor --url=http://ftsf.dp.test')。
+	 * @param string $args  wp のあとの引数 (sh の形。例 'dp doctor --url=http://ftsf.dp.test')。
 	 * @return array{code: int, out: string}
 	 */
 	protected static function wp( string $args ): array {

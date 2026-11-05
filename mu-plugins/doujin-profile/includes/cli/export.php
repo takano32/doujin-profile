@@ -1,6 +1,6 @@
 <?php
 /**
- * wp doujin export: いまのサイトの内容を交換形式の JSON (spec §6.4) で書き出す。形の決まりは lib/Cli/Exchange.php。
+ * wp dp export: いまのサイトの内容を交換形式の JSON (spec §6.4) で書き出す。形の決まりは lib/Cli/Exchange.php。
  */
 
 namespace DoujinProfile\Commands;
@@ -24,7 +24,7 @@ final class Export {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp doujin export --url=https://ftsf.dp.no32.tk --out=ftsf.json
+	 *     wp dp export --url=https://ftsf.dp.no32.tk --out=ftsf.json
 	 */
 	public function __invoke( $args, $assoc_args ) {
 		doujin_profile_cli_require_profile_site();

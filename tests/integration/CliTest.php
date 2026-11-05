@@ -3,26 +3,26 @@
 namespace DoujinProfile\Tests\Integration;
 
 /**
- * WP-CLI (spec §8.5): wp doujin の子コマンドの名前・引数・出力。
+ * WP-CLI (spec §8.5): wp dp の子コマンドの名前・引数・出力。
  */
 final class CliTest extends IntegrationTestCase {
 
 	public function test_help_lists_the_six_subcommands(): void {
-		$r = self::wp( 'help doujin' );
+		$r = self::wp( 'help dp' );
 		$this->assertSame( 0, $r['code'], $r['out'] );
 		$this->assertStringContainsString( 'サークル紹介サイト (doujin-profile) の運営の道具。', $r['out'] );
 		foreach ( array( 'init-site', 'import', 'export', 'invite', 'publish', 'doctor' ) as $sub ) {
 			$this->assertMatchesRegularExpression( '/^\s*' . preg_quote( $sub, '/' ) . '\s/m', $r['out'], $sub );
 		}
 
-		$r = self::wp( 'help doujin import' );
+		$r = self::wp( 'help dp import' );
 		$this->assertStringContainsString( '<file>', $r['out'] );
 		$this->assertStringContainsString( '[--dry-run]', $r['out'] );
-		$this->assertStringContainsString( 'wp doujin import ~/dumps/doujin-profile-import-f_tsf/f_tsf.json', $r['out'] );
+		$this->assertStringContainsString( 'wp dp import ~/dumps/doujin-profile-import-f_tsf/f_tsf.json', $r['out'] );
 	}
 
 	public function test_doctor_passes_for_the_profile_site(): void {
-		$r = self::wpSite( 'doujin doctor' );
+		$r = self::wpSite( 'dp doctor' );
 		$this->assertStringContainsString( '== 本体 (WordPress ', $r['out'] );
 		$this->assertStringContainsString( '== サイト https://ftsf.dp.test/', $r['out'] );
 		foreach ( array(
@@ -49,7 +49,7 @@ final class CliTest extends IntegrationTestCase {
 	}
 
 	public function test_doctor_on_the_main_site_checks_the_network(): void {
-		$r = self::wp( 'doujin doctor' );
+		$r = self::wp( 'dp doctor' );
 		$this->assertStringContainsString( '== ネットワーク http://dp.test/', $r['out'] );
 		$this->assertStringContainsString( '[OK] サブドメイン型の Multisite', $r['out'] );
 		$this->assertStringContainsString( '[OK] 子テーマ doujin-profile-tt5 がネットワークで有効', $r['out'] );
@@ -60,7 +60,7 @@ final class CliTest extends IntegrationTestCase {
 	}
 
 	public function test_init_site_is_idempotent_and_refuses_the_main_site(): void {
-		$r = self::wpSite( 'doujin init-site' );
+		$r = self::wpSite( 'dp init-site' );
 		$this->assertSame( 0, $r['code'], $r['out'] );
 		$this->assertStringContainsString( '- 書き換え規則を作り直した', $r['out'] );
 		$this->assertStringNotContainsString( 'を https に', $r['out'] );
@@ -68,13 +68,13 @@ final class CliTest extends IntegrationTestCase {
 		$this->assertStringNotContainsString( 'ホーム', $r['out'] );
 		$this->assertStringContainsString( 'Success: https://ftsf.dp.test/ の初期設定を整えました。', $r['out'] );
 
-		$r = self::wp( 'doujin init-site' );
+		$r = self::wp( 'dp init-site' );
 		$this->assertSame( 1, $r['code'] );
 		$this->assertStringContainsString( 'メインサイトには効かせません', $r['out'] );
 	}
 
 	public function test_export_writes_the_exchange_format(): void {
-		$r = self::wpSite( 'doujin export' );
+		$r = self::wpSite( 'dp export' );
 		$this->assertSame( 0, $r['code'], $r['out'] );
 		$data = json_decode( substr( $r['out'], (int) strpos( $r['out'], '{' ) ), true );
 		$this->assertIsArray( $data, $r['out'] );
@@ -101,12 +101,12 @@ final class CliTest extends IntegrationTestCase {
 
 	public function test_import_is_idempotent_and_dry_run_writes_nothing(): void {
 		$json = self::fixtures() . '/works.json';
-		$r    = self::wpSite( 'doujin import ' . escapeshellarg( $json ) . ' --dry-run' );
+		$r    = self::wpSite( 'dp import ' . escapeshellarg( $json ) . ' --dry-run' );
 		$this->assertSame( 0, $r['code'], $r['out'] );
 		$this->assertStringContainsString( '== dry-run: 何も書きません ==', $r['out'] );
 		$this->assertStringContainsString( 'Success: dry-run: 作品 3 件 (作成 0・更新 3・失敗 0) の予定。', $r['out'] );
 
-		$r = self::wpSite( 'doujin import ' . escapeshellarg( $json ) );
+		$r = self::wpSite( 'dp import ' . escapeshellarg( $json ) );
 		$this->assertSame( 0, $r['code'], $r['out'] );
 		$this->assertStringContainsString( 'Success: 作品 3 件 (作成 0・更新 3・失敗 0)。', $r['out'] );
 		$this->assertStringContainsString( '発売日時「not a date」が読めないので空にします', $r['out'] );
@@ -121,15 +121,15 @@ final class CliTest extends IntegrationTestCase {
 		$json = self::fixtures() . '/works.json';
 		$tmp  = tempnam( get_temp_dir(), 'doujin-profile-other-' ) . '.json';
 		file_put_contents( $tmp, str_replace( '"name": "ftsf"', '"name": "other"', (string) file_get_contents( $json ) ) );
-		$r = self::wpSite( 'doujin import ' . escapeshellarg( $tmp ) . ' --dry-run' );
+		$r = self::wpSite( 'dp import ' . escapeshellarg( $tmp ) . ' --dry-run' );
 		$this->assertSame( 1, $r['code'] );
 		$this->assertStringContainsString( 'JSON の name「other」とこのサイト「ftsf」', $r['out'] );
-		$r = self::wpSite( 'doujin import ' . escapeshellarg( $tmp ) . ' --dry-run --force' );
+		$r = self::wpSite( 'dp import ' . escapeshellarg( $tmp ) . ' --dry-run --force' );
 		$this->assertSame( 0, $r['code'], $r['out'] );
 		unlink( $tmp );
 
 		$f_tsf = dirname( self::fixtures() ) . '/src/data/f_tsf.json'; // 本番の見本 (作品番号で書影を指す)。dry-run なので取りに行かない
-		$r     = self::wpSite( 'doujin import ' . escapeshellarg( $f_tsf ) . ' --dry-run' );
+		$r     = self::wpSite( 'dp import ' . escapeshellarg( $f_tsf ) . ' --dry-run' );
 		$this->assertSame( 0, $r['code'], $r['out'] );
 		$this->assertStringContainsString( '書影: 作品番号 ', $r['out'] );
 		$this->assertStringContainsString( 'Success: dry-run: 作品 3 件', $r['out'] );
@@ -140,17 +140,17 @@ final class CliTest extends IntegrationTestCase {
 	 * (本体の既知の問題。T.54 の結合試験で判明。直すなら別の名前にする)。ここでは新しいユーザの道筋だけを確かめる。
 	 */
 	public function test_invite_validates_before_creating_anything(): void {
-		$r = self::wp( 'doujin invite ab x@example.test --dry-run' );
+		$r = self::wp( 'dp invite ab x@example.test --dry-run' );
 		$this->assertSame( 1, $r['code'] );
 		$this->assertStringContainsString( 'ユーザを作れません: ', $r['out'] );
 
-		$r = self::wp( 'doujin invite ftsf other@example.test --dry-run' ); // 既にいるユーザの名前
+		$r = self::wp( 'dp invite ftsf other@example.test --dry-run' ); // 既にいるユーザの名前
 		$this->assertSame( 1, $r['code'] );
 		$this->assertStringContainsString( 'ユーザを作れません: ', $r['out'] );
 		$this->assertStringContainsString( '--user=ftsf を付けてください', $r['out'] );
 		$this->assertStringNotContainsString( '<strong>', $r['out'] ); // コアの HTML は外す
 
-		$r = self::wp( 'doujin invite newcircle new@example.test --title=新しいサークル --mature --dry-run' );
+		$r = self::wp( 'dp invite newcircle new@example.test --title=新しいサークル --mature --dry-run' );
 		$this->assertSame( 0, $r['code'], $r['out'] );
 		$this->assertStringContainsString( '- サイト: https://newcircle.dp.test/ (タイトル「新しいサークル」、成人向け オン、準備中で始める)', $r['out'] );
 		$this->assertStringContainsString( '- 持ち主: 新しいユーザ newcircle (メール n***@example.test) をこのサイトの administrator に', $r['out'] );

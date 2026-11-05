@@ -1,6 +1,6 @@
 <?php
 /**
- * wp doujin import: 交換形式の JSON (spec §6.4) から、サークル名・リード文・リンク集・作品を入れる。
+ * wp dp import: 交換形式の JSON (spec §6.4) から、サークル名・リード文・リンク集・作品を入れる。
  *
  * 照合: 作品は slug (JSON の key。無ければ書影の作品番号、それも無ければタイトル) で探し、あれば更新・無ければ作る。
  * 画像は出どころ (作品番号の URL、https の URL、JSON に書かれた道筋) を添付のメタ _doujin_profile_source_url に持つので、
@@ -51,8 +51,8 @@ final class Import {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp doujin import ~/dumps/doujin-profile-import-f_tsf/f_tsf.json --url=https://ftsf.dp.no32.tk --dry-run
-	 *     wp doujin import ~/dumps/doujin-profile-import-f_tsf/f_tsf.json --url=https://ftsf.dp.no32.tk
+	 *     wp dp import ~/dumps/doujin-profile-import-f_tsf/f_tsf.json --url=https://ftsf.dp.no32.tk --dry-run
+	 *     wp dp import ~/dumps/doujin-profile-import-f_tsf/f_tsf.json --url=https://ftsf.dp.no32.tk
 	 */
 	public function __invoke( $args, $assoc_args ) {
 		doujin_profile_cli_require_profile_site();

@@ -126,12 +126,12 @@ doujin-profile の仕事と、決めることの一覧。**ここが台帳の正
 - [x] **T.49** ユーザ管理をする。認証は他のプラグインを参考にした一般的な設計にし、権限に注意する(spec の要件。旧「R2」)。2026-09-18
 - [x] **T.50** 2 段階認証を求めない代わりのログインの守り。2026-10-24「実施してよい」: wordpress.org の **Limit Login Attempts Reloaded 3.3.10** をネットワークで有効化(自作なし。退避は `~/dumps/pre-doujin-profile-login-limit-20261024-1350/`)。Caddy 経由で 4 回間違えると締め出され、正しいパスワードも通らないこと、記録が訪問者の本当の IP で残ることを一時ユーザで確認。試験の記録と一時ユーザは消した。設定は既定のまま
 - [x] **T.52** コメントと XML-RPC の守り。2026-10-24「プラグインでできないんか？」「普通に配布されてるやつね」→ 選択式で「配布物を 2 つ入れる」: **Disable Comments 2.9.0** と **Disable XML-RPC 1.0.1** をネットワーク有効化。両サイトでコメント欄と `X-Pingback` が消え、XML-RPC の認証の要るメソッドは 405 で断られることを確認。自作の `profile-site-hardening.php` は消した。退避は `~/dumps/pre-doujin-profile-comments-xmlrpc-20261024/`
-- [~] **T.54** リファクタリング(テスト可能なことと責務の分割、カプセル化)。2026-11-05 サイト所有者「Fable max でリファクタリングしてくれ / テスト可能なことと責務の分割、カプセル化などを重視して細かいファイルに割って構わない」。振る舞い(REST・設定とメタの名前・ブロック・`wp doujin`・フックと優先度・守り)は変えない。試験は docker を使わず、さくらの `~/doujin-profile-test/` で(「docker 使わずにリモートホストでテスト」「テストはなるべくさくらでやりたいかもね / 環境が近い」)
+- [~] **T.54** リファクタリング(テスト可能なことと責務の分割、カプセル化)。2026-11-05 サイト所有者「Fable max でリファクタリングしてくれ / テスト可能なことと責務の分割、カプセル化などを重視して細かいファイルに割って構わない」。振る舞い(REST・設定とメタの名前・ブロック・`wp dp`・フックと優先度・守り)は変えない。試験は docker を使わず、さくらの `~/doujin-profile-test/` で(「docker 使わずにリモートホストでテスト」「テストはなるべくさくらでやりたいかもね / 環境が近い」)
   - [x] **T.54.1** PHP の分割: `includes/` を 1 責務 1 ファイルに(data/・import/・cli/・my-page/・blocks/)、WordPress を読まないロジックを `lib/`(名前空間 `DoujinProfile\`、小さなオートローダ)へ。2026-11-05
   - [x] **T.54.2** PHP の単体試験(PHPUnit 9.6 の phar。`tests/php`)と `scripts/test.sh`(さくらに同期して `php -l` と PHPUnit)。2026-11-05 さくら(PHP 8.3.36)で通った
   - [x] **T.54.3** JS の分割(`src/my-page/lib/`・`src/blocks/work-card/logic.js`)と単体試験(`wp-scripts test-unit-js` = vitest 5。`npm test`)、`build/` の作り直し。2026-11-05
   - [x] **T.54.4** さくらでの結合試験(本番と同じ版の WordPress を SQLite Database Integration で使い捨てに設置。`tests/integration`・`tests/remote/integration.sh`)。2026-11-05
-  - [ ] **T.54.5** 本番への配備と検収 👤(`scripts/deploy.sh` の dry-run を目で見てから `--go`。リポジトリで消した `includes/{data,cover-import,cli,my-page,blocks}.php` はサーバで手で消す。配備後に `wp doujin doctor` と `scripts/check-site.sh`、マイページをブラウザで)
+  - [ ] **T.54.5** 本番への配備と検収 👤(`scripts/deploy.sh` の dry-run を目で見てから `--go`。リポジトリで消した `includes/{data,cover-import,cli,my-page,blocks}.php` はサーバで手で消す。配備後に `wp dp doctor` と `scripts/check-site.sh`、マイページをブラウザで)
 - [~] **T.53** 招待メールが届くようにする。2026-10-25: Gmail が `550-5.7.26`(SPF も DKIM も無い)で断っていた。裁定「さくらに送信用アドレス」。**2026-10-25 届くようになった**(SMTP 認証 + `dp.no32.tk` の SPF)。残りは任意(T.53.1 のドメイン登録、T.53.4 の DKIM)
   - [~] **T.53.1** さくらのコントロールパネルで `dp.no32.tk` を登録し、送信用のアドレスを作る 👤。2026-10-25: メールボックス `noreply` はできた。`dp.no32.tk` の登録は未確認(SMTP 認証は初期ドメインの名前で通している)
   - [x] **T.53.2** WP Mail SMTP(配布物)。2026-10-25 4.10.3 をネットワーク有効化、定数は wp-config.php(パスワードはサイト所有者が入れた)

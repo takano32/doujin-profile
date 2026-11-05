@@ -1,6 +1,6 @@
 <?php
 /**
- * wp doujin init-site: 新しいサイトの初期設定を、作成済みのサイトに施す (処理は includes/init-site.php)。
+ * wp dp init-site: 新しいサイトの初期設定を、作成済みのサイトに施す (処理は includes/init-site.php)。
  */
 
 namespace DoujinProfile\Commands;
@@ -21,7 +21,7 @@ final class InitSite {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp doujin init-site --url=https://ftsf.dp.no32.tk
+	 *     wp dp init-site --url=https://ftsf.dp.no32.tk
 	 */
 	public function __invoke( $args, $assoc_args ) {
 		doujin_profile_cli_require_profile_site();

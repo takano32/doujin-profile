@@ -1,6 +1,6 @@
 <?php
 /**
- * wp doujin doctor: 点検 (読み取りだけ。--fix は安全な 3 つだけ直す)。
+ * wp dp doctor: 点検 (読み取りだけ。--fix は安全な 3 つだけ直す)。
  *
  * ここは WordPress から事実を読む側。1 件ずつの記録 (OK / NG / FIXED と NG の数) は lib/Cli/DoctorReport.php、
  * 読まなくても決まる判定 (画像でない形式・https とドメイン・書き換え規則・容量の割合・まとめの文) は lib/Cli/DoctorRules.php。
@@ -38,9 +38,9 @@ final class Doctor {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp doujin doctor
-	 *     wp doujin doctor --url=https://ftsf.dp.no32.tk
-	 *     wp doujin doctor --url=https://ftsf.dp.no32.tk --fix
+	 *     wp dp doctor
+	 *     wp dp doctor --url=https://ftsf.dp.no32.tk
+	 *     wp dp doctor --url=https://ftsf.dp.no32.tk --fix
 	 */
 	public function __invoke( $args, $assoc_args ) {
 		$this->report = new DoctorReport(
@@ -139,7 +139,7 @@ final class Doctor {
 	 */
 	private function doctor_site( $site ) {
 		$url      = $site ? "https://{$site->domain}{$site->path}" : home_url( '/' );
-		$fix_init = "wp doujin init-site --url={$url}";
+		$fix_init = "wp dp init-site --url={$url}";
 
 		// URL。
 		foreach ( array( 'home', 'siteurl' ) as $name ) {
@@ -150,7 +150,7 @@ final class Doctor {
 		// 状態。
 		if ( $site ) {
 			$preparing = (bool) get_option( DOUJIN_PROFILE_PREPARING_OPTION, false );
-			$this->report->info( $preparing ? '準備中 (ログインしていない人には「準備中です」だけ。公開は持ち主のマイページか wp doujin publish ' . strtok( $site->domain, '.' ) . ')' : '公開中' );
+			$this->report->info( $preparing ? '準備中 (ログインしていない人には「準備中です」だけ。公開は持ち主のマイページか wp dp publish ' . strtok( $site->domain, '.' ) . ')' : '公開中' );
 			$this->report->info( '成人向けの印: ' . ( (int) $site->mature ? 'オン (年齢確認と rating=adult が出る)' : 'オフ (年齢確認は出ない。付けるなら wp site mature ' . $site->blog_id . ')' ) );
 			$this->check( ! (int) $site->archived && ! (int) $site->spam && ! (int) $site->deleted, 'アーカイブ・スパム・削除の印が無い', "wp site unarchive/unspam {$site->blog_id}" );
 		}

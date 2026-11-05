@@ -1,6 +1,6 @@
 <?php
 /**
- * 点検 (wp doujin doctor) の記録。1 件ずつ [OK] / [NG] / [FIXED] / [--] の行を出し、NG の数を持つ。
+ * 点検 (wp dp doctor) の記録。1 件ずつ [OK] / [NG] / [FIXED] / [--] の行を出し、NG の数を持つ。
  *
  * 行の出し方 (WP_CLI::log) は注入する。--fix のときは、直す処理 (安全なものだけ) があれば実行して [FIXED] にする。
  */

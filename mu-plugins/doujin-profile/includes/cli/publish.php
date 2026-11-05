@@ -1,6 +1,6 @@
 <?php
 /**
- * wp doujin publish: 準備中のサイトを公開する (--unpublish で準備中に戻す)。印は設定 doujin_profile_preparing (includes/preparing.php)。
+ * wp dp publish: 準備中のサイトを公開する (--unpublish で準備中に戻す)。印は設定 doujin_profile_preparing (includes/preparing.php)。
  */
 
 namespace DoujinProfile\Commands;
@@ -28,8 +28,8 @@ final class Publish {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp doujin publish example
-	 *     wp doujin publish example --unpublish
+	 *     wp dp publish example
+	 *     wp dp publish example --unpublish
 	 */
 	public function __invoke( $args, $assoc_args ) {
 		if ( ! is_multisite() ) {

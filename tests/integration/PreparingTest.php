@@ -61,17 +61,17 @@ final class PreparingTest extends IntegrationTestCase {
 	}
 
 	public function test_publish_command_toggles_preparing(): void {
-		$r = self::wp( 'doujin publish ftsf --unpublish' );
+		$r = self::wp( 'dp publish ftsf --unpublish' );
 		$this->assertSame( 0, $r['code'], $r['out'] );
 		$this->assertStringContainsString( 'https://ftsf.dp.test/ を準備中に戻しました。', $r['out'] );
-		$this->assertStringContainsString( 'すでに準備中です', self::wp( 'doujin publish ftsf --unpublish' )['out'] );
+		$this->assertStringContainsString( 'すでに準備中です', self::wp( 'dp publish ftsf --unpublish' )['out'] );
 
-		$r = self::wp( 'doujin publish ftsf' );
+		$r = self::wp( 'dp publish ftsf' );
 		$this->assertStringContainsString( 'https://ftsf.dp.test/ を公開しました。', $r['out'] );
 		$this->useSite();
 		$this->assertFalse( doujin_profile_is_preparing() );
 
-		$r = self::wp( 'doujin publish nosuchsite' );
+		$r = self::wp( 'dp publish nosuchsite' );
 		$this->assertSame( 1, $r['code'] );
 		$this->assertStringContainsString( 'サイト「nosuchsite」はありません', $r['out'] );
 	}

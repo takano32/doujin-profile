@@ -85,10 +85,10 @@ fi
 wp theme enable doujin-profile-tt5 --network --path="$WP" --quiet
 check "$(wp eval 'exit( defined( "DOUJIN_PROFILE_VERSION" ) && function_exists( "doujin_profile_sanitize_links" ) ? 0 : 1 );' --path="$WP"; echo $?)" "本体が読み込まれる (mu-plugins)"
 
-# 6. プロフィールのサイト ftsf.dp.test (wp doujin invite。新しいユーザ ftsf を作り、init-site と「準備中」が走る。メールは pre_wp_mail で止まる) と、
+# 6. プロフィールのサイト ftsf.dp.test (wp dp invite。新しいユーザ ftsf を作り、init-site と「準備中」が走る。メールは pre_wp_mail で止まる) と、
 #    ユーザ owner (ftsf の administrator。特権管理者ではない) と reader (購読者)。
 #    注意: invite の [--user=<login>] は WP-CLI の全体の引数 --user (動作するユーザ) に取られて子コマンドに届かない (本体の既知の問題。T.54 で判明)
-wp doujin invite ftsf ftsf@dp.test --title="試験サークル" --mature --path="$WP" | tee "$ROOT/invite.log"
+wp dp invite ftsf ftsf@dp.test --title="試験サークル" --mature --path="$WP" | tee "$ROOT/invite.log"
 check "$(grep -q 'ユーザ ftsf (ID' "$ROOT/invite.log" && grep -q 'を準備中で作りました。持ち主 ftsf' "$ROOT/invite.log"; echo $?)" "invite がユーザとサイトを作った"
 check "$([ "$(site option get doujin_profile_preparing)" = 1 ]; echo $?)" "invite で作ったサイトは準備中で始まる"
 check "$([ "$(site option get home)" = https://ftsf.dp.test ]; echo $?)" "invite で作ったサイトの home は https ($(site option get home))"
@@ -103,11 +103,11 @@ rm -rf "$FIX"
 mkdir -p "$FIX/images"
 cp "$ROOT/src/tests/integration/fixtures/works.json" "$FIX/"
 php "$ROOT/src/tests/integration/fixtures/make-images.php" "$FIX/images"
-site doujin import "$FIX/works.json"
+site dp import "$FIX/works.json"
 check "$([ "$(site post list --post_type=post --post_status=any --format=count)" = 3 ]; echo $?)" "見本の作品 3 件が入った"
 check "$([ "$(site option get stylesheet)" = doujin-profile-tt5 ]; echo $?)" "テーマは子テーマ doujin-profile-tt5"
-wp doujin publish ftsf --path="$WP"
-check "$([ "$(site option get doujin_profile_preparing)" = "" ] || [ "$(site option get doujin_profile_preparing)" = 0 ]; echo $?)" "wp doujin publish で公開中になった"
+wp dp publish ftsf --path="$WP"
+check "$([ "$(site option get doujin_profile_preparing)" = "" ] || [ "$(site option get doujin_profile_preparing)" = 0 ]; echo $?)" "wp dp publish で公開中になった"
 
 # 8. PHPUnit (本物の WordPress を読み込んで、フック・REST・WP-CLI・ブロックの描画を確かめる)
 say "PHPUnit (結合): src/tests/integration"

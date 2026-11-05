@@ -1,6 +1,6 @@
 <?php
 /**
- * 点検 (wp doujin doctor) の判定のうち、WordPress を読まなくても決まるもの。読むのは糊 (includes/cli/doctor.php)。
+ * 点検 (wp dp doctor) の判定のうち、WordPress を読まなくても決まるもの。読むのは糊 (includes/cli/doctor.php)。
  */
 
 namespace DoujinProfile\Cli;

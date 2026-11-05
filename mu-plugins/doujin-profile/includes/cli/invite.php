@@ -1,6 +1,6 @@
 <?php
 /**
- * wp doujin invite: 招待。サイトと持ち主を作り、準備中で始める (spec §7.4)。
+ * wp dp invite: 招待。サイトと持ち主を作り、準備中で始める (spec §7.4)。
  *
  * コアの検証 (wpmu_validate_user_signup / wpmu_validate_blog_signup) と作成 (wpmu_create_user / wpmu_create_blog) に乗る。
  * wpmu_create_blog → wp_initialize_site で includes/init-site.php の初期設定が自動で走るので、ここでは呼ばない (二重にしない)。
@@ -50,8 +50,8 @@ final class Invite {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp doujin invite example circle@example.com --title="サークル名" --mature --dry-run
-	 *     wp doujin invite example circle@example.com --title="サークル名" --mature
+	 *     wp dp invite example circle@example.com --title="サークル名" --mature --dry-run
+	 *     wp dp invite example circle@example.com --title="サークル名" --mature
 	 */
 	public function __invoke( $args, $assoc_args ) {
 		if ( ! is_multisite() ) {
@@ -139,6 +139,6 @@ final class Invite {
 			WP_CLI::log( 'パスワード設定のリンクをメールで送りました。' );
 		}
 
-		WP_CLI::success( "{$url} を準備中で作りました。持ち主 {$user->user_login}。点検: wp doujin doctor --url={$url}" );
+		WP_CLI::success( "{$url} を準備中で作りました。持ち主 {$user->user_login}。点検: wp dp doctor --url={$url}" );
 	}
 }
